@@ -17,7 +17,7 @@ func NewSearchFlightsUsecase() *SearchFlightsUsecase {
 		provider.NewAirAsiaProvider(),
 		provider.NewGarudaProvider(),
 		provider.NewLionProvider(),
-		// TODO: add others here later
+		provider.NewBatikProvider(),
 	}
 
 	return &SearchFlightsUsecase{
