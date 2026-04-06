@@ -16,6 +16,7 @@ func NewSearchFlightsUsecase() *SearchFlightsUsecase {
 	providers := []provider.Provider{
 		provider.NewAirAsiaProvider(),
 		provider.NewGarudaProvider(),
+		provider.NewLionProvider(),
 		// TODO: add others here later
 	}
 
