@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"os"
 	"time"
@@ -43,8 +44,15 @@ type batikResponse struct {
 			Class      string `json:"class"`
 		} `json:"fare"`
 
-		Seats int `json:"seatsAvailable"`
+		Seats           int      `json:"seatsAvailable"`
+		AircraftModel   string   `json:"aircraftModel"`
+		BaggageInfo     string   `json:"baggageInfo"`
+		OnboardServices []string `json:"onboardServices"`
 	} `json:"results"`
+}
+
+var batikClassMapper = map[string]string{
+	"Y": "economy",
 }
 
 func (p *BatikProvider) Name() string {
@@ -95,23 +103,31 @@ func (p *BatikProvider) Search(ctx context.Context, req domain.SearchRequest) ([
 		duration := computeDuration(dep, arr, f.TravelTime)
 
 		flight := domain.Flight{
-			ID:              f.FlightNumber + "_Batik",
-			Provider:        "Batik",
-			FlightNumber:    f.FlightNumber,
-			Stops:           f.Stops,
-			AvailableSeats:  f.Seats,
-			CabinClass:      "economy", // from "Y"
-			DurationMinutes: duration,
+			ID:             fmt.Sprintf("%s_%s", f.FlightNumber, p.Name()),
+			Provider:       p.Name(),
+			FlightNumber:   f.FlightNumber,
+			Stops:          f.Stops,
+			AvailableSeats: f.Seats,
+			CabinClass:     batikClassMapper[f.Fare.Class],
+			Aircraft:       &f.AircraftModel,
+			Duration: domain.Duration{
+				TotalMinutes: duration,
+				Formatted:    formatDuration(duration),
+			},
+			Amenities: f.OnboardServices,
+			Baggage:   parseBaggage(f.BaggageInfo),
 		}
 
 		flight.Airline.Name = f.AirlineName
 		flight.Airline.Code = f.AirlineIATA
 
 		flight.Departure.Airport = f.Origin
+		flight.Departure.City = getCityByAirport(f.Origin)
 		flight.Departure.Datetime = dep
 		flight.Departure.Timestamp = dep.Unix()
 
 		flight.Arrival.Airport = f.Destination
+		flight.Arrival.City = getCityByAirport(f.Destination)
 		flight.Arrival.Datetime = arr
 		flight.Arrival.Timestamp = arr.Unix()
 

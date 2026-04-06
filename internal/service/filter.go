@@ -1,6 +1,8 @@
 package service
 
-import "github.com/ermusthofa/flight-aggregator-service/internal/domain"
+import (
+	"github.com/ermusthofa/flight-aggregator-service/internal/domain"
+)
 
 func FilterFlights(flights []domain.Flight, req domain.SearchRequest) []domain.Flight {
 	var result []domain.Flight

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"math/rand"
 	"time"
 
@@ -19,17 +20,18 @@ func NewAirAsiaProvider() *AirAsiaProvider {
 type airAsiaResponse struct {
 	Status  string `json:"status"`
 	Flights []struct {
-		FlightCode string  `json:"flight_code"`
-		Airline    string  `json:"airline"`
-		From       string  `json:"from_airport"`
-		To         string  `json:"to_airport"`
-		DepartTime string  `json:"depart_time"`
-		ArriveTime string  `json:"arrive_time"`
-		Duration   float64 `json:"duration_hours"`
-		Direct     bool    `json:"direct_flight"`
-		Price      int     `json:"price_idr"`
-		Seats      int     `json:"seats"`
-		CabinClass string  `json:"cabin_class"`
+		FlightCode  string  `json:"flight_code"`
+		Airline     string  `json:"airline"`
+		From        string  `json:"from_airport"`
+		To          string  `json:"to_airport"`
+		DepartTime  string  `json:"depart_time"`
+		ArriveTime  string  `json:"arrive_time"`
+		Duration    float64 `json:"duration_hours"`
+		Direct      bool    `json:"direct_flight"`
+		Price       int     `json:"price_idr"`
+		Seats       int     `json:"seats"`
+		CabinClass  string  `json:"cabin_class"`
+		BaggageNote string  `json:"baggage_note"`
 	} `json:"flights"`
 }
 
@@ -67,27 +69,34 @@ func (p *AirAsiaProvider) Search(ctx context.Context, req domain.SearchRequest) 
 		arr, _ := time.Parse(time.RFC3339, f.ArriveTime)
 
 		flight := domain.Flight{
-			ID:             f.FlightCode + "_AirAsia",
-			Provider:       "AirAsia",
+			ID:             fmt.Sprintf("%s_%s", f.FlightCode, p.Name()),
+			Provider:       p.Name(),
 			FlightNumber:   f.FlightCode,
 			Stops:          0,
 			AvailableSeats: f.Seats,
 			CabinClass:     f.CabinClass,
+			Amenities:      []string{},
+			Baggage:        parseBaggage(f.BaggageNote),
 		}
 
 		flight.Airline.Name = f.Airline
 		flight.Airline.Code = f.FlightCode[:2]
 
 		flight.Departure.Airport = f.From
+		flight.Departure.City = getCityByAirport(f.From)
 		flight.Departure.Datetime = dep
 		flight.Departure.Timestamp = dep.Unix()
 
 		flight.Arrival.Airport = f.To
+		flight.Arrival.City = getCityByAirport(f.To)
 		flight.Arrival.Datetime = arr
 		flight.Arrival.Timestamp = arr.Unix()
 
 		duration := arr.Sub(dep).Minutes()
-		flight.DurationMinutes = int(duration)
+		flight.Duration = domain.Duration{
+			TotalMinutes: int(duration),
+			Formatted:    formatDuration(int(duration)),
+		}
 
 		if !f.Direct {
 			flight.Stops = 1

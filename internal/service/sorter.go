@@ -16,7 +16,7 @@ func SortFlights(flights []domain.Flight, sortBy string) {
 
 	case "duration":
 		sort.Slice(flights, func(i, j int) bool {
-			return flights[i].DurationMinutes < flights[j].DurationMinutes
+			return flights[i].Duration.TotalMinutes < flights[j].Duration.TotalMinutes
 		})
 
 	case "departure":

@@ -3,8 +3,10 @@ package provider
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/ermusthofa/flight-aggregator-service/internal/domain"
@@ -30,9 +32,11 @@ type lionResponse struct {
 			Route struct {
 				From struct {
 					Code string `json:"code"`
+					City string `json:"city"`
 				} `json:"from"`
 				To struct {
 					Code string `json:"code"`
+					City string `json:"city"`
 				} `json:"to"`
 			} `json:"route"`
 
@@ -54,10 +58,20 @@ type lionResponse struct {
 			} `json:"layovers"`
 
 			Pricing struct {
-				Total int `json:"total"`
+				Total    int    `json:"total"`
+				FareType string `json:"fare_type"`
 			} `json:"pricing"`
 
-			Seats int `json:"seats_left"`
+			Seats     int    `json:"seats_left"`
+			PlaneType string `json:"plane_type"`
+			Services  struct {
+				WifiAvailable    bool `json:"wifi_available"`
+				MealsIncluded    bool `json:"meals_included"`
+				BaggageAllowance struct {
+					Cabin string `json:"cabin"`
+					Hold  string `json:"hold"`
+				} `json:"baggage_allowance"`
+			} `json:"services"`
 		} `json:"available_flights"`
 	} `json:"data"`
 }
@@ -121,23 +135,34 @@ func (p *LionProvider) Search(ctx context.Context, req domain.SearchRequest) ([]
 		}
 
 		flight := domain.Flight{
-			ID:              f.ID + "_Lion",
-			Provider:        "Lion",
-			FlightNumber:    f.ID,
-			Stops:           stops,
-			AvailableSeats:  f.Seats,
-			CabinClass:      "economy", // from fare_type
-			DurationMinutes: duration,
+			ID:             fmt.Sprintf("%s_%s", f.ID, p.Name()),
+			Provider:       p.Name(),
+			FlightNumber:   f.ID,
+			Stops:          stops,
+			AvailableSeats: f.Seats,
+			CabinClass:     strings.ToLower(f.Pricing.FareType),
+			Aircraft:       &f.PlaneType,
+			Duration: domain.Duration{
+				TotalMinutes: duration,
+				Formatted:    formatDuration(duration),
+			},
+			Amenities: mapLionServicesToAmenities(f.Services.WifiAvailable, f.Services.MealsIncluded),
+			Baggage: domain.Baggage{
+				CarryOn: f.Services.BaggageAllowance.Cabin,
+				Checked: f.Services.BaggageAllowance.Hold,
+			},
 		}
 
 		flight.Airline.Name = f.Carrier.Name
 		flight.Airline.Code = f.Carrier.IATA
 
 		flight.Departure.Airport = f.Route.From.Code
+		flight.Departure.City = f.Route.From.City
 		flight.Departure.Datetime = dep
 		flight.Departure.Timestamp = dep.Unix()
 
 		flight.Arrival.Airport = f.Route.To.Code
+		flight.Arrival.City = f.Route.To.City
 		flight.Arrival.Datetime = arr
 		flight.Arrival.Timestamp = arr.Unix()
 
@@ -148,4 +173,17 @@ func (p *LionProvider) Search(ctx context.Context, req domain.SearchRequest) ([]
 	}
 
 	return result, nil
+}
+
+func mapLionServicesToAmenities(wifiAvailable, mealsIncluded bool) []string {
+	amenities := make([]string, 0)
+
+	if wifiAvailable {
+		amenities = append(amenities, "wifi")
+	}
+	if mealsIncluded {
+		amenities = append(amenities, "meals")
+	}
+
+	return amenities
 }

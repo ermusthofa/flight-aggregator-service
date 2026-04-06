@@ -5,7 +5,7 @@ import "github.com/ermusthofa/flight-aggregator-service/internal/domain"
 func ScoreFlights(flights []domain.Flight) {
 	for i := range flights {
 		price := flights[i].Price.Amount
-		duration := flights[i].DurationMinutes
+		duration := flights[i].Duration.TotalMinutes
 
 		// simple weighted score
 		score := price + (duration * 1000)

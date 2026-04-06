@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"os"
 	"time"
@@ -24,16 +25,19 @@ type garudaResponse struct {
 
 		Departure struct {
 			Airport string `json:"airport"`
+			City    string `json:"city"`
 			Time    string `json:"time"`
 		} `json:"departure"`
 
 		Arrival struct {
 			Airport string `json:"airport"`
+			City    string `json:"city"`
 			Time    string `json:"time"`
 		} `json:"arrival"`
 
-		DurationMinutes int `json:"duration_minutes"`
-		Stops           int `json:"stops"`
+		DurationMinutes int    `json:"duration_minutes"`
+		Stops           int    `json:"stops"`
+		Aircraft        string `json:"aircraft"`
 
 		Segments []struct {
 			Departure struct {
@@ -54,6 +58,11 @@ type garudaResponse struct {
 
 		AvailableSeats int    `json:"available_seats"`
 		FareClass      string `json:"fare_class"`
+		Baggage        struct {
+			CarryOn int `json:"carry_on"`
+			Checked int `json:"checked"`
+		} `json:"baggage"`
+		Amenities []string `json:"amenities"`
 	} `json:"flights"`
 }
 
@@ -119,23 +128,34 @@ func (p *GarudaProvider) Search(ctx context.Context, req domain.SearchRequest) (
 		}
 
 		flight := domain.Flight{
-			ID:              f.FlightID + "_Garuda",
-			Provider:        "Garuda",
-			FlightNumber:    f.FlightID,
-			Stops:           stops,
-			AvailableSeats:  f.AvailableSeats,
-			CabinClass:      f.FareClass,
-			DurationMinutes: totalDuration,
+			ID:             fmt.Sprintf("%s_%s", f.FlightID, p.Name()),
+			Provider:       p.Name(),
+			FlightNumber:   f.FlightID,
+			Stops:          stops,
+			AvailableSeats: f.AvailableSeats,
+			CabinClass:     f.FareClass,
+			Aircraft:       &f.Aircraft,
+			Duration: domain.Duration{
+				TotalMinutes: totalDuration,
+				Formatted:    formatDuration(totalDuration),
+			},
+			Amenities: ensureSlice(f.Amenities),
+			Baggage: domain.Baggage{
+				CarryOn: fmt.Sprintf("%d", f.Baggage.CarryOn),
+				Checked: fmt.Sprintf("%d", f.Baggage.Checked),
+			},
 		}
 
 		flight.Airline.Name = f.Airline
 		flight.Airline.Code = f.FlightID[:2]
 
 		flight.Departure.Airport = f.Departure.Airport
+		flight.Departure.City = f.Departure.City
 		flight.Departure.Datetime = dep
 		flight.Departure.Timestamp = dep.Unix()
 
 		flight.Arrival.Airport = f.Arrival.Airport
+		flight.Arrival.City = f.Arrival.City
 		flight.Arrival.Datetime = arr
 		flight.Arrival.Timestamp = arr.Unix()
 
