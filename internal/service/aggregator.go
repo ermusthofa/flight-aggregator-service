@@ -29,6 +29,7 @@ type providerResult struct {
 }
 
 type Metadata struct {
+	TotalResults       int   `json:"total_results"`
 	ProvidersQueried   int   `json:"providers_queried"`
 	ProvidersSucceeded int   `json:"providers_succeeded"`
 	ProvidersFailed    int   `json:"providers_failed"`
@@ -88,6 +89,7 @@ func (a *Aggregator) Search(ctx context.Context, req domain.SearchRequest) ([]do
 	ScoreFlights(allFlights)
 	SortFlights(allFlights, req.SortBy)
 
+	meta.TotalResults = len(allFlights)
 	meta.SearchTimeMs = time.Since(start).Milliseconds()
 
 	return allFlights, meta
