@@ -1,27 +1,22 @@
 package usecase
 
-import "github.com/ermusthofa/flight-aggregator-service/internal/domain"
+import (
+	"context"
 
-type SearchFlightsUsecase struct{}
+	"github.com/ermusthofa/flight-aggregator-service/internal/domain"
+	"github.com/ermusthofa/flight-aggregator-service/internal/provider"
+)
 
-func NewSearchFlightsUsecase() *SearchFlightsUsecase {
-	return &SearchFlightsUsecase{}
+type SearchFlightsUsecase struct {
+	airasia *provider.AirAsiaProvider
 }
 
-func (u *SearchFlightsUsecase) Execute() ([]domain.Flight, error) {
-	// temporary dummy response
-	flights := []domain.Flight{
-		{
-			ID:            "dummy_1",
-			Provider:      "mock",
-			FlightNumber:  "XX123",
-			Origin:        "CGK",
-			Destination:   "DPS",
-			DepartureTime: "2025-12-15T10:00:00+07:00",
-			ArrivalTime:   "2025-12-15T12:00:00+08:00",
-			Price:         500000,
-		},
+func NewSearchFlightsUsecase() *SearchFlightsUsecase {
+	return &SearchFlightsUsecase{
+		airasia: provider.NewAirAsiaProvider(),
 	}
+}
 
-	return flights, nil
+func (u *SearchFlightsUsecase) Execute(ctx context.Context, req domain.SearchRequest) ([]domain.Flight, error) {
+	return u.airasia.Search(ctx, req)
 }
