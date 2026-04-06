@@ -39,14 +39,17 @@ func (h *Handler) SearchFlights(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	flights, err := h.usecase.Execute(r.Context(), req)
+	flights, meta, err := h.usecase.Execute(r.Context(), req)
 	if err != nil {
 		pkg.Error("Usecase error: %v", err)
 		writeError(w, "internal server error", "INTERNAL_ERROR", http.StatusInternalServerError)
 		return
 	}
 
-	writeSuccess(w, flights)
+	writeSuccess(w, map[string]interface{}{
+		"flights":  flights,
+		"metadata": meta,
+	})
 }
 
 func writeSuccess(w http.ResponseWriter, data interface{}) {
