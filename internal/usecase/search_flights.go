@@ -15,6 +15,7 @@ type SearchFlightsUsecase struct {
 func NewSearchFlightsUsecase() *SearchFlightsUsecase {
 	providers := []provider.Provider{
 		provider.NewAirAsiaProvider(),
+		provider.NewGarudaProvider(),
 		// TODO: add others here later
 	}
 
