@@ -2,7 +2,9 @@ package usecase
 
 import (
 	"context"
+	"time"
 
+	"github.com/ermusthofa/flight-aggregator-service/internal/cache"
 	"github.com/ermusthofa/flight-aggregator-service/internal/domain"
 	"github.com/ermusthofa/flight-aggregator-service/internal/provider"
 	"github.com/ermusthofa/flight-aggregator-service/internal/service"
@@ -21,7 +23,10 @@ func NewSearchFlightsUsecase() *SearchFlightsUsecase {
 	}
 
 	return &SearchFlightsUsecase{
-		aggregator: service.NewAggregator(providers),
+		aggregator: service.NewAggregator(
+			providers,
+			cache.NewMemoryCache(60*time.Second), // 60 sec cache
+		),
 	}
 }
 

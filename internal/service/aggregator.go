@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
+	"github.com/ermusthofa/flight-aggregator-service/internal/cache"
 	"github.com/ermusthofa/flight-aggregator-service/internal/domain"
 	"github.com/ermusthofa/flight-aggregator-service/internal/pkg"
 	"github.com/ermusthofa/flight-aggregator-service/internal/provider"
@@ -13,12 +15,14 @@ import (
 type Aggregator struct {
 	providers []provider.Provider
 	timeout   time.Duration
+	cache     *cache.MemoryCache
 }
 
-func NewAggregator(providers []provider.Provider) *Aggregator {
+func NewAggregator(providers []provider.Provider, cache *cache.MemoryCache) *Aggregator {
 	return &Aggregator{
 		providers: providers,
 		timeout:   500 * time.Millisecond,
+		cache:     cache,
 	}
 }
 
@@ -34,6 +38,7 @@ type Metadata struct {
 	ProvidersSucceeded int   `json:"providers_succeeded"`
 	ProvidersFailed    int   `json:"providers_failed"`
 	SearchTimeMs       int64 `json:"search_time_ms"`
+	CacheHit           bool  `json:"cache_hit"`
 }
 
 func (a *Aggregator) Search(ctx context.Context, req domain.SearchRequest) ([]domain.Flight, Metadata) {
@@ -41,6 +46,25 @@ func (a *Aggregator) Search(ctx context.Context, req domain.SearchRequest) ([]do
 
 	ctx, cancel := context.WithTimeout(ctx, a.timeout)
 	defer cancel()
+
+	key := buildCacheKey(req)
+
+	if data, ok := a.cache.Get(key); ok {
+		meta := Metadata{
+			ProvidersQueried: len(a.providers),
+			CacheHit:         true,
+		}
+
+		// apply user filters
+		data = FilterFlights(data, req)
+		ScoreFlights(data)
+		SortFlights(data, req.SortBy)
+
+		meta.TotalResults = len(data)
+		meta.SearchTimeMs = time.Since(start).Milliseconds()
+
+		return data, meta
+	}
 
 	var wg sync.WaitGroup
 	ch := make(chan providerResult, len(a.providers))
@@ -85,6 +109,11 @@ func (a *Aggregator) Search(ctx context.Context, req domain.SearchRequest) ([]do
 		allFlights = append(allFlights, res.flights...)
 	}
 
+	// cache raw data
+	if meta.ProvidersFailed == 0 {
+		a.cache.Set(key, allFlights)
+	}
+
 	// filter, score, and sort
 	allFlights = FilterFlights(allFlights, req)
 	ScoreFlights(allFlights)
@@ -94,4 +123,13 @@ func (a *Aggregator) Search(ctx context.Context, req domain.SearchRequest) ([]do
 	meta.SearchTimeMs = time.Since(start).Milliseconds()
 
 	return allFlights, meta
+}
+
+func buildCacheKey(req domain.SearchRequest) string {
+	return fmt.Sprintf("%s:%s:%s:%s",
+		req.Origin,
+		req.Destination,
+		req.DepartureDate,
+		req.CabinClass,
+	)
 }
