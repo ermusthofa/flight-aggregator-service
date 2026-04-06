@@ -14,6 +14,8 @@ type Flight struct {
 	Price           Price     `json:"price"`
 	AvailableSeats  int       `json:"available_seats"`
 	CabinClass      string    `json:"cabin_class"`
+
+	Score int `json:"-"`
 }
 
 type Airline struct {

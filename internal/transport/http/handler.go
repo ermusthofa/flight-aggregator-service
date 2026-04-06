@@ -39,6 +39,8 @@ func (h *Handler) SearchFlights(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	req.Normalize()
+
 	flights, meta, err := h.usecase.Execute(r.Context(), req)
 	if err != nil {
 		pkg.Error("Usecase error: %v", err)
