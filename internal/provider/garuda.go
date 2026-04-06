@@ -122,6 +122,11 @@ func (p *GarudaProvider) Search(ctx context.Context, req domain.SearchRequest) (
 			totalDuration = f.DurationMinutes
 		}
 
+		// apply search criteria
+		if !req.Matches(f.Departure.Airport, f.Arrival.Airport, dep, f.AvailableSeats, f.FareClass) {
+			continue
+		}
+
 		// validate
 		if arr.Before(dep) {
 			continue

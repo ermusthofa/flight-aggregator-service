@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/ermusthofa/flight-aggregator-service/internal/domain"
+	"github.com/ermusthofa/flight-aggregator-service/internal/pkg"
 )
 
 type BatikProvider struct{}
@@ -49,10 +50,6 @@ type batikResponse struct {
 		BaggageInfo     string   `json:"baggageInfo"`
 		OnboardServices []string `json:"onboardServices"`
 	} `json:"results"`
-}
-
-var batikClassMapper = map[string]string{
-	"Y": "economy",
 }
 
 func (p *BatikProvider) Name() string {
@@ -99,6 +96,13 @@ func (p *BatikProvider) Search(ctx context.Context, req domain.SearchRequest) ([
 			continue
 		}
 
+		cabinClass := getBatikCabinClass(f.Fare.Class)
+
+		// apply search criteria
+		if !req.Matches(f.Origin, f.Destination, dep, f.Seats, cabinClass) {
+			continue
+		}
+
 		// compute duration (prefer real time diff)
 		duration := computeDuration(dep, arr, f.TravelTime)
 
@@ -108,7 +112,7 @@ func (p *BatikProvider) Search(ctx context.Context, req domain.SearchRequest) ([
 			FlightNumber:   f.FlightNumber,
 			Stops:          f.Stops,
 			AvailableSeats: f.Seats,
-			CabinClass:     batikClassMapper[f.Fare.Class],
+			CabinClass:     cabinClass,
 			Aircraft:       &f.AircraftModel,
 			Duration: domain.Duration{
 				TotalMinutes: duration,
@@ -147,4 +151,16 @@ func computeDuration(dep, arr time.Time, fallback string) int {
 		return duration
 	}
 	return parseDuration(fallback)
+}
+
+var batikCabinClassMapper = map[string]string{
+	"Y": "economy",
+}
+
+func getBatikCabinClass(code string) string {
+	if mappedClass, exists := batikCabinClassMapper[code]; exists {
+		return mappedClass
+	}
+	pkg.Warning("Unmapped Batik Air cabin class code '%s'", code)
+	return "unknown"
 }

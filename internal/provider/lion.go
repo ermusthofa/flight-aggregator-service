@@ -126,6 +126,13 @@ func (p *LionProvider) Search(ctx context.Context, req domain.SearchRequest) ([]
 			continue
 		}
 
+		cabinClass := strings.ToLower(f.Pricing.FareType)
+
+		// apply search criteria
+		if !req.Matches(f.Route.From.Code, f.Route.To.Code, dep, f.Seats, cabinClass) {
+			continue
+		}
+
 		// compute duration safely
 		duration := int(arr.Sub(dep).Minutes())
 
@@ -140,7 +147,7 @@ func (p *LionProvider) Search(ctx context.Context, req domain.SearchRequest) ([]
 			FlightNumber:   f.ID,
 			Stops:          stops,
 			AvailableSeats: f.Seats,
-			CabinClass:     strings.ToLower(f.Pricing.FareType),
+			CabinClass:     cabinClass,
 			Aircraft:       &f.PlaneType,
 			Duration: domain.Duration{
 				TotalMinutes: duration,

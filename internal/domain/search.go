@@ -141,6 +141,33 @@ func (r *SearchRequest) Normalize() {
 	}
 }
 
+func (r SearchRequest) Matches(origin, destination string, dep time.Time, passengers int, cabin string) bool {
+
+	// Route
+	if origin != r.Origin || destination != r.Destination {
+		return false
+	}
+
+	// Date (compare only YYYY-MM-DD)
+	if dep.Format("2006-01-02") != r.DepartureDate {
+		return false
+	}
+
+	// Passangers
+	if passengers < r.Passengers {
+		return false
+	}
+
+	// Cabin class (optional)
+	if r.CabinClass != "" && cabin != "" {
+		if !strings.EqualFold(cabin, r.CabinClass) {
+			return false
+		}
+	}
+
+	return true
+}
+
 func isValidClock(value string) bool {
 	if value == "" {
 		return true

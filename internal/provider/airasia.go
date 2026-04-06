@@ -72,6 +72,16 @@ func (p *AirAsiaProvider) Search(ctx context.Context, req domain.SearchRequest) 
 		dep, _ := time.Parse(time.RFC3339, f.DepartTime)
 		arr, _ := time.Parse(time.RFC3339, f.ArriveTime)
 
+		// validate
+		if arr.Before(dep) {
+			continue
+		}
+
+		// apply search criteria
+		if !req.Matches(f.From, f.To, dep, f.Seats, f.CabinClass) {
+			continue
+		}
+
 		flight := domain.Flight{
 			ID:             fmt.Sprintf("%s_%s", f.FlightCode, p.Name()),
 			Provider:       p.Name(),

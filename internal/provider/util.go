@@ -13,6 +13,29 @@ func loadMock(filename string) ([]byte, error) {
 	return os.ReadFile(filename)
 }
 
+var airportCityMap = map[string]string{
+	"CGK": "Jakarta",
+	"DPS": "Denpasar",
+	"SOC": "Solo",
+	"UPG": "Makassar",
+	"SUB": "Surabaya",
+	// Add more mappings as needed
+}
+
+func getCityByAirport(airport string) string {
+	city, exists := airportCityMap[airport]
+	if !exists {
+		return "Unknown"
+	}
+	return city
+}
+
+func formatDuration(minutes int) string {
+	h := minutes / 60
+	m := minutes % 60
+	return fmt.Sprintf("%dh %dm", h, m)
+}
+
 func parseWithTimezone(dt string, tz string) (time.Time, error) {
 	loc, err := time.LoadLocation(tz)
 	if err != nil {
@@ -28,12 +51,6 @@ func parseDuration(s string) int {
 	fmt.Sscanf(s, "%dh %dm", &hours, &minutes)
 
 	return hours*60 + minutes
-}
-
-func formatDuration(minutes int) string {
-	h := minutes / 60
-	m := minutes % 60
-	return fmt.Sprintf("%dh %dm", h, m)
 }
 
 func ensureSlice(s []string) []string {
@@ -66,22 +83,4 @@ func parseBaggage(baggageNote string) domain.Baggage {
 	}
 
 	return baggage
-}
-
-var airportCityMap = map[string]string{
-	"CGK": "Jakarta",
-	"DPS": "Denpasar",
-	"SOC": "Solo",
-	"UPG": "Makassar",
-	"SUB": "Surabaya",
-	// Add more mappings as needed
-}
-
-// GetCityByAirport retrieves the city name for a given airport code.
-func getCityByAirport(airport string) string {
-	city, exists := airportCityMap[airport]
-	if !exists {
-		return "Unknown"
-	}
-	return city
 }
