@@ -7,26 +7,33 @@ import (
 )
 
 func SortFlights(flights []domain.Flight, sortBy string) {
-	switch sortBy {
+	sort.SliceStable(flights, func(i, j int) bool {
 
-	case "price":
-		sort.Slice(flights, func(i, j int) bool {
+		switch sortBy {
+
+		case "price":
+			if flights[i].Price.Amount == flights[j].Price.Amount {
+				return flights[i].Duration.TotalMinutes < flights[j].Duration.TotalMinutes
+			}
 			return flights[i].Price.Amount < flights[j].Price.Amount
-		})
 
-	case "duration":
-		sort.Slice(flights, func(i, j int) bool {
+		case "duration":
+			if flights[i].Duration.TotalMinutes == flights[j].Duration.TotalMinutes {
+				return flights[i].Price.Amount < flights[j].Price.Amount
+			}
 			return flights[i].Duration.TotalMinutes < flights[j].Duration.TotalMinutes
-		})
 
-	case "departure":
-		sort.Slice(flights, func(i, j int) bool {
+		case "departure":
 			return flights[i].Departure.Timestamp < flights[j].Departure.Timestamp
-		})
 
-	case "best":
-		sort.Slice(flights, func(i, j int) bool {
+		case "arrival":
+			return flights[i].Arrival.Timestamp < flights[j].Arrival.Timestamp
+
+		case "best":
 			return flights[i].Score < flights[j].Score
-		})
-	}
+
+		default:
+			return flights[i].Score < flights[j].Score
+		}
+	})
 }

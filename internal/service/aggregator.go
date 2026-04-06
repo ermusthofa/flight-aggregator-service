@@ -85,6 +85,7 @@ func (a *Aggregator) Search(ctx context.Context, req domain.SearchRequest) ([]do
 		allFlights = append(allFlights, res.flights...)
 	}
 
+	// filter, score, and sort
 	allFlights = FilterFlights(allFlights, req)
 	ScoreFlights(allFlights)
 	SortFlights(allFlights, req.SortBy)

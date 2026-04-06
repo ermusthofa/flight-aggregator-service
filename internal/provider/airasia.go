@@ -20,18 +20,22 @@ func NewAirAsiaProvider() *AirAsiaProvider {
 type airAsiaResponse struct {
 	Status  string `json:"status"`
 	Flights []struct {
-		FlightCode  string  `json:"flight_code"`
-		Airline     string  `json:"airline"`
-		From        string  `json:"from_airport"`
-		To          string  `json:"to_airport"`
-		DepartTime  string  `json:"depart_time"`
-		ArriveTime  string  `json:"arrive_time"`
-		Duration    float64 `json:"duration_hours"`
-		Direct      bool    `json:"direct_flight"`
-		Price       int     `json:"price_idr"`
-		Seats       int     `json:"seats"`
-		CabinClass  string  `json:"cabin_class"`
-		BaggageNote string  `json:"baggage_note"`
+		FlightCode string  `json:"flight_code"`
+		Airline    string  `json:"airline"`
+		From       string  `json:"from_airport"`
+		To         string  `json:"to_airport"`
+		DepartTime string  `json:"depart_time"`
+		ArriveTime string  `json:"arrive_time"`
+		Duration   float64 `json:"duration_hours"`
+		Direct     bool    `json:"direct_flight"`
+		Stops      []struct {
+			Airport         string `json:"airport"`
+			WaitTimeMinutes int    `json:"wait_time_minutes"`
+		} `json:"stops"`
+		Price       int    `json:"price_idr"`
+		Seats       int    `json:"seats"`
+		CabinClass  string `json:"cabin_class"`
+		BaggageNote string `json:"baggage_note"`
 	} `json:"flights"`
 }
 
@@ -99,7 +103,7 @@ func (p *AirAsiaProvider) Search(ctx context.Context, req domain.SearchRequest) 
 		}
 
 		if !f.Direct {
-			flight.Stops = 1
+			flight.Stops = len(f.Stops)
 		}
 
 		flight.Price.Amount = f.Price
