@@ -96,17 +96,17 @@ func (p *LionProvider) Search(ctx context.Context, req domain.SearchRequest) ([]
 		// Parse times with timezone mapping (WIB/WITA/WIT)
 		dep, err := parseWithTimezone(f.Schedule.Departure, f.Schedule.DepartureTimezone)
 		if err != nil {
-			warnSkip(ctx, f.ID, "parse departure time", err)
+			warnSkip(ctx, p.Name(), f.ID, "parse departure time", err)
 			continue
 		}
 		arr, err := parseWithTimezone(f.Schedule.Arrival, f.Schedule.ArrivalTimezone)
 		if err != nil {
-			warnSkip(ctx, f.ID, "parse arrival time", err)
+			warnSkip(ctx, p.Name(), f.ID, "parse arrival time", err)
 			continue
 		}
 
 		if arr.Before(dep) {
-			warnSkip(ctx, f.ID, "arrival before departure", err)
+			warnSkip(ctx, p.Name(), f.ID, "arrival before departure", err)
 			continue
 		}
 

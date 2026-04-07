@@ -72,18 +72,18 @@ func (p *AirAsiaProvider) Search(ctx context.Context, req domain.SearchRequest) 
 		// Parse times
 		dep, err := time.Parse(time.RFC3339, f.DepartTime)
 		if err != nil {
-			warnSkip(ctx, f.FlightCode, "parse departure time", err)
+			warnSkip(ctx, p.Name(), f.FlightCode, "parse departure time", err)
 			continue
 		}
 		arr, err := time.Parse(time.RFC3339, f.ArriveTime)
 		if err != nil {
-			warnSkip(ctx, f.FlightCode, "parse arrival time", err)
+			warnSkip(ctx, p.Name(), f.FlightCode, "parse arrival time", err)
 			continue
 		}
 
 		// Validate arrival after departure
 		if arr.Before(dep) {
-			warnSkip(ctx, f.FlightCode, "arrival before departure", nil)
+			warnSkip(ctx, p.Name(), f.FlightCode, "arrival before departure", nil)
 			continue
 		}
 

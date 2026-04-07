@@ -99,12 +99,12 @@ func (p *GarudaProvider) Search(ctx context.Context, req domain.SearchRequest) (
 			var err error
 			dep, err = time.Parse(time.RFC3339, firstSeg.Departure.Time)
 			if err != nil {
-				warnSkip(ctx, f.FlightID, "parse departure time", err)
+				warnSkip(ctx, p.Name(), f.FlightID, "parse departure time", err)
 				continue
 			}
 			arr, err = time.Parse(time.RFC3339, lastSeg.Arrival.Time)
 			if err != nil {
-				warnSkip(ctx, f.FlightID, "parse arrival time", err)
+				warnSkip(ctx, p.Name(), f.FlightID, "parse arrival time", err)
 				continue
 			}
 			stops = len(f.Segments) - 1
@@ -116,12 +116,12 @@ func (p *GarudaProvider) Search(ctx context.Context, req domain.SearchRequest) (
 			var err error
 			dep, err = time.Parse(time.RFC3339, f.Departure.Time)
 			if err != nil {
-				warnSkip(ctx, f.FlightID, "parse departure time", err)
+				warnSkip(ctx, p.Name(), f.FlightID, "parse departure time", err)
 				continue
 			}
 			arr, err = time.Parse(time.RFC3339, f.Arrival.Time)
 			if err != nil {
-				warnSkip(ctx, f.FlightID, "parse arrival time", err)
+				warnSkip(ctx, p.Name(), f.FlightID, "parse arrival time", err)
 				continue
 			}
 			stops = f.Stops
@@ -131,7 +131,7 @@ func (p *GarudaProvider) Search(ctx context.Context, req domain.SearchRequest) (
 		}
 
 		if arr.Before(dep) {
-			warnSkip(ctx, f.FlightID, "arrival before departure", nil)
+			warnSkip(ctx, p.Name(), f.FlightID, "arrival before departure", nil)
 			continue
 		}
 

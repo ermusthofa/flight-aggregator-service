@@ -75,17 +75,17 @@ func (p *BatikProvider) Search(ctx context.Context, req domain.SearchRequest) ([
 	for _, f := range resp.Results {
 		dep, err := time.Parse("2006-01-02T15:04:05-0700", f.Departure)
 		if err != nil {
-			warnSkip(ctx, f.FlightNumber, "parse departure time", err)
+			warnSkip(ctx, p.Name(), f.FlightNumber, "parse departure time", err)
 			continue
 		}
 		arr, err := time.Parse("2006-01-02T15:04:05-0700", f.Arrival)
 		if err != nil {
-			warnSkip(ctx, f.FlightNumber, "parse arrival time", err)
+			warnSkip(ctx, p.Name(), f.FlightNumber, "parse arrival time", err)
 			continue
 		}
 
 		if arr.Before(dep) {
-			warnSkip(ctx, f.FlightNumber, "arrival before departure", nil)
+			warnSkip(ctx, p.Name(), f.FlightNumber, "arrival before departure", nil)
 			continue
 		}
 
