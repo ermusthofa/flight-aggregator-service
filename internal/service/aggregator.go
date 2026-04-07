@@ -101,9 +101,7 @@ func (a *Aggregator) Search(ctx context.Context, req domain.SearchRequest) ([]do
 	}
 
 	// cache raw data
-	if meta.ProvidersFailed == 0 {
-		a.cache.Set(key, allFlights, 5*time.Second)
-	}
+	a.cache.Set(key, allFlights, 5*time.Second)
 
 	// filter, score, and sort
 	allFlights = FilterFlights(allFlights, req)

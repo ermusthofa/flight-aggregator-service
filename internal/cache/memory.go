@@ -32,7 +32,11 @@ func (c *MemoryCache) Get(key string) ([]domain.Flight, bool) {
 		return nil, false
 	}
 
-	return item.Data, true
+	// clone before returning
+	copied := make([]domain.Flight, len(item.Data))
+	copy(copied, item.Data)
+
+	return copied, true
 }
 
 func (c *MemoryCache) Set(key string, data []domain.Flight, ttl time.Duration) {
