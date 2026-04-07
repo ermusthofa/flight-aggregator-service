@@ -43,6 +43,10 @@ func (p *AirAsiaProvider) Name() string {
 	return "AirAsia"
 }
 
+func (p *AirAsiaProvider) MaxRetries() int {
+	return 2
+}
+
 func (p *AirAsiaProvider) Search(ctx context.Context, req domain.SearchRequest) ([]domain.Flight, error) {
 	// simulate delay (50–150ms)
 	delay := time.Duration(50+rand.Intn(100)) * time.Millisecond

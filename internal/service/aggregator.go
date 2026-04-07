@@ -15,10 +15,10 @@ import (
 type Aggregator struct {
 	providers []provider.Provider
 	timeout   time.Duration
-	cache     *cache.MemoryCache
+	cache     cache.Cache
 }
 
-func NewAggregator(providers []provider.Provider, cache *cache.MemoryCache) *Aggregator {
+func NewAggregator(providers []provider.Provider, cache cache.Cache) *Aggregator {
 	return &Aggregator{
 		providers: providers,
 		timeout:   500 * time.Millisecond,
@@ -77,7 +77,7 @@ func (a *Aggregator) Search(ctx context.Context, req domain.SearchRequest) ([]do
 
 			pkg.Info("Calling provider: %s", p.Name())
 
-			flights, err := p.Search(ctx, req)
+			flights, err := a.callProviderWithRetry(ctx, p, req, p.MaxRetries())
 
 			if err != nil {
 				pkg.Error("Provider %s failed: %v", p.Name(), err)
@@ -111,7 +111,7 @@ func (a *Aggregator) Search(ctx context.Context, req domain.SearchRequest) ([]do
 
 	// cache raw data
 	if meta.ProvidersFailed == 0 {
-		a.cache.Set(key, allFlights)
+		a.cache.Set(key, allFlights, 5*time.Second)
 	}
 
 	// filter, score, and sort
@@ -123,6 +123,44 @@ func (a *Aggregator) Search(ctx context.Context, req domain.SearchRequest) ([]do
 	meta.SearchTimeMs = time.Since(start).Milliseconds()
 
 	return allFlights, meta
+}
+
+func (a *Aggregator) callProviderWithRetry(
+	ctx context.Context,
+	p provider.Provider,
+	req domain.SearchRequest,
+	maxRetries int,
+) ([]domain.Flight, error) {
+
+	var flights []domain.Flight
+	var err error
+
+	backoff := 50 * time.Millisecond
+
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+
+		flights, err = p.Search(ctx, req)
+		if err == nil {
+			return flights, nil
+		}
+
+		// last attempt → stop
+		if attempt == maxRetries {
+			break
+		}
+
+		pkg.Error("Provider %s failed (attempt %d): %v", p.Name(), attempt+1, err)
+
+		// exponential backoff
+		select {
+		case <-time.After(backoff):
+			backoff *= 2
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		}
+	}
+
+	return nil, err
 }
 
 func buildCacheKey(req domain.SearchRequest) string {

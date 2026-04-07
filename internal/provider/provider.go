@@ -9,4 +9,5 @@ import (
 type Provider interface {
 	Name() string
 	Search(ctx context.Context, req domain.SearchRequest) ([]domain.Flight, error)
+	MaxRetries() int
 }

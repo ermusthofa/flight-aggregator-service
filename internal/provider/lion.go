@@ -80,6 +80,10 @@ func (p *LionProvider) Name() string {
 	return "Lion"
 }
 
+func (p *LionProvider) MaxRetries() int {
+	return 1
+}
+
 func (p *LionProvider) Search(ctx context.Context, req domain.SearchRequest) ([]domain.Flight, error) {
 
 	// simulate delay (100–200ms)

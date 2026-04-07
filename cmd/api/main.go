@@ -4,16 +4,17 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/ermusthofa/flight-aggregator-service/internal/cache"
 	httpHandler "github.com/ermusthofa/flight-aggregator-service/internal/transport/http"
 	"github.com/ermusthofa/flight-aggregator-service/internal/usecase"
 )
 
 func main() {
 	// init usecase
-	searchUsecase := usecase.NewSearchFlightsUsecase()
+	usecase := usecase.NewSearchFlightsUsecase(cache.NewMemoryCache())
 
 	// init handler
-	handler := httpHandler.NewHandler(searchUsecase)
+	handler := httpHandler.NewHandler(usecase)
 
 	// routes
 	http.HandleFunc("/search", handler.SearchFlights)

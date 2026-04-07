@@ -15,13 +15,11 @@ type CacheItem struct {
 type MemoryCache struct {
 	mu    sync.RWMutex
 	store map[string]CacheItem
-	ttl   time.Duration
 }
 
-func NewMemoryCache(ttl time.Duration) *MemoryCache {
+func NewMemoryCache() *MemoryCache {
 	return &MemoryCache{
 		store: make(map[string]CacheItem),
-		ttl:   ttl,
 	}
 }
 
@@ -37,12 +35,12 @@ func (c *MemoryCache) Get(key string) ([]domain.Flight, bool) {
 	return item.Data, true
 }
 
-func (c *MemoryCache) Set(key string, data []domain.Flight) {
+func (c *MemoryCache) Set(key string, data []domain.Flight, ttl time.Duration) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
 	c.store[key] = CacheItem{
 		Data:      data,
-		ExpiredAt: time.Now().Add(c.ttl),
+		ExpiredAt: time.Now().Add(ttl),
 	}
 }

@@ -56,6 +56,10 @@ func (p *BatikProvider) Name() string {
 	return "Batik"
 }
 
+func (p *BatikProvider) MaxRetries() int {
+	return 1
+}
+
 func (p *BatikProvider) Search(ctx context.Context, req domain.SearchRequest) ([]domain.Flight, error) {
 
 	// simulate delay (200–400ms)

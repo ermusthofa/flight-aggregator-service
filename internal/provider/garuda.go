@@ -70,6 +70,10 @@ func (p *GarudaProvider) Name() string {
 	return "Garuda"
 }
 
+func (p *GarudaProvider) MaxRetries() int {
+	return 1
+}
+
 func (p *GarudaProvider) Search(ctx context.Context, req domain.SearchRequest) ([]domain.Flight, error) {
 
 	// simulate delay (50–100ms)

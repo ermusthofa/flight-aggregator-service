@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"time"
 
 	"github.com/ermusthofa/flight-aggregator-service/internal/cache"
 	"github.com/ermusthofa/flight-aggregator-service/internal/domain"
@@ -14,7 +13,7 @@ type SearchFlightsUsecase struct {
 	aggregator *service.Aggregator
 }
 
-func NewSearchFlightsUsecase() *SearchFlightsUsecase {
+func NewSearchFlightsUsecase(c cache.Cache) *SearchFlightsUsecase {
 	providers := []provider.Provider{
 		provider.NewAirAsiaProvider(),
 		provider.NewGarudaProvider(),
@@ -23,10 +22,7 @@ func NewSearchFlightsUsecase() *SearchFlightsUsecase {
 	}
 
 	return &SearchFlightsUsecase{
-		aggregator: service.NewAggregator(
-			providers,
-			cache.NewMemoryCache(60*time.Second), // 60 sec cache
-		),
+		aggregator: service.NewAggregator(providers, c),
 	}
 }
 
