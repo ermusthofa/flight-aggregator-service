@@ -32,7 +32,7 @@ func ToResponse(
 		ProvidersSucceeded: meta.ProvidersSucceeded,
 		ProvidersFailed:    meta.ProvidersFailed,
 		SearchTimeMs:       meta.SearchTimeMs,
-		CacheHit:           false,
+		CacheHit:           meta.CacheHit,
 	}
 
 	// flights
