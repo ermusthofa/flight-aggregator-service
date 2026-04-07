@@ -9,11 +9,17 @@ import (
 
 	"github.com/ermusthofa/flight-aggregator-service/internal/domain"
 	"github.com/ermusthofa/flight-aggregator-service/internal/partner/mock"
+	ratelimit "github.com/ermusthofa/flight-aggregator-service/internal/partner/ratelimiter"
 )
 
-type GarudaProvider struct{}
+type GarudaProvider struct {
+	limiter *ratelimit.RateLimiter
+}
 
-func NewGarudaProvider() *GarudaProvider { return &GarudaProvider{} }
+func NewGarudaProvider() *GarudaProvider {
+	// Allow 100 requests per second
+	return &GarudaProvider{limiter: ratelimit.New(100, time.Second)}
+}
 
 type garudaResponse struct {
 	Status  string `json:"status"`
@@ -62,6 +68,10 @@ type garudaResponse struct {
 func (p *GarudaProvider) Name() string { return "Garuda" }
 
 func (p *GarudaProvider) Search(ctx context.Context, req domain.SearchRequest) ([]domain.Flight, error) {
+	if !p.limiter.Allow() {
+		return nil, fmt.Errorf("%s API rate limit exceeded", p.Name())
+	}
+
 	// simulate delay (50–100ms)
 	delay := time.Duration(50+rand.Intn(50)) * time.Millisecond
 	select {

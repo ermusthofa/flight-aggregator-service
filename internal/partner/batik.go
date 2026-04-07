@@ -11,11 +11,17 @@ import (
 
 	"github.com/ermusthofa/flight-aggregator-service/internal/domain"
 	"github.com/ermusthofa/flight-aggregator-service/internal/partner/mock"
+	ratelimit "github.com/ermusthofa/flight-aggregator-service/internal/partner/ratelimiter"
 )
 
-type BatikProvider struct{}
+type BatikProvider struct {
+	limiter *ratelimit.RateLimiter
+}
 
-func NewBatikProvider() *BatikProvider { return &BatikProvider{} }
+func NewBatikProvider() *BatikProvider {
+	// 2 requests per minute
+	return &BatikProvider{limiter: ratelimit.New(2, time.Minute)}
+}
 
 type batikResponse struct {
 	Code    int    `json:"code"`
@@ -48,6 +54,10 @@ type batikResponse struct {
 func (p *BatikProvider) Name() string { return "Batik" }
 
 func (p *BatikProvider) Search(ctx context.Context, req domain.SearchRequest) ([]domain.Flight, error) {
+	if !p.limiter.Allow() {
+		return nil, fmt.Errorf("%s API rate limit exceeded", p.Name())
+	}
+
 	// simulate delay (200–400ms)
 	delay := time.Duration(200+rand.Intn(200)) * time.Millisecond
 	select {

@@ -98,6 +98,21 @@ This is mainly to handle unstable providers (like AirAsia in the mock).
 
 ---
 
+### Rate Limiting
+To simulate real‑world API constraints, each provider has its own fixed‑interval rate limiter. The limiter enforces a minimum gap between consecutive requests to the same provider, based on a configured number of requests per time window.
+
+Current limits per provider:
+```
+AirAsia – 100 requests per second
+Batik Air – 2 requests per minute
+Garuda Indonesia – 100 requests per second
+Lion Air – 100 requests per second
+```
+
+If a provider exceeds its allowed rate, the request is immediately rejected with a "rate limit exceeded" error. This behaviour helps test the system’s resilience to throttling from external APIs.
+
+---
+
 ### Caching
 
 * In-memory cache with short TTL (5 seconds)

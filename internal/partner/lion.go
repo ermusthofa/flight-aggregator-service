@@ -9,11 +9,17 @@ import (
 
 	"github.com/ermusthofa/flight-aggregator-service/internal/domain"
 	"github.com/ermusthofa/flight-aggregator-service/internal/partner/mock"
+	ratelimit "github.com/ermusthofa/flight-aggregator-service/internal/partner/ratelimiter"
 )
 
-type LionProvider struct{}
+type LionProvider struct {
+	limiter *ratelimit.RateLimiter
+}
 
-func NewLionProvider() *LionProvider { return &LionProvider{} }
+func NewLionProvider() *LionProvider {
+	// Allow 100 requests per second
+	return &LionProvider{limiter: ratelimit.New(100, time.Second)}
+}
 
 type lionResponse struct {
 	Success bool `json:"success"`
@@ -68,6 +74,10 @@ type lionResponse struct {
 func (p *LionProvider) Name() string { return "Lion" }
 
 func (p *LionProvider) Search(ctx context.Context, req domain.SearchRequest) ([]domain.Flight, error) {
+	if !p.limiter.Allow() {
+		return nil, fmt.Errorf("%s API rate limit exceeded", p.Name())
+	}
+
 	// Simulate delay 100-200ms with context awareness
 	delay := time.Duration(100+rand.Intn(100)) * time.Millisecond
 	select {

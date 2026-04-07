@@ -9,11 +9,17 @@ import (
 
 	"github.com/ermusthofa/flight-aggregator-service/internal/domain"
 	"github.com/ermusthofa/flight-aggregator-service/internal/partner/mock"
+	ratelimit "github.com/ermusthofa/flight-aggregator-service/internal/partner/ratelimiter"
 )
 
-type AirAsiaProvider struct{}
+type AirAsiaProvider struct {
+	limiter *ratelimit.RateLimiter
+}
 
-func NewAirAsiaProvider() *AirAsiaProvider { return &AirAsiaProvider{} }
+func NewAirAsiaProvider() *AirAsiaProvider {
+	// Allow 100 requests per second
+	return &AirAsiaProvider{limiter: ratelimit.New(100, time.Second)}
+}
 
 type airAsiaResponse struct {
 	Flights []struct {
@@ -39,6 +45,10 @@ type airAsiaResponse struct {
 func (p *AirAsiaProvider) Name() string { return "AirAsia" }
 
 func (p *AirAsiaProvider) Search(ctx context.Context, req domain.SearchRequest) ([]domain.Flight, error) {
+	if !p.limiter.Allow() {
+		return nil, fmt.Errorf("%s API rate limit exceeded", p.Name())
+	}
+
 	// Simulate delay 50-150ms with context awareness
 	delay := time.Duration(50+rand.Intn(100)) * time.Millisecond
 	select {
