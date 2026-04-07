@@ -55,8 +55,9 @@ type Flight struct {
 	Stops int `json:"stops"`
 
 	Price struct {
-		Amount   int    `json:"amount"`
-		Currency string `json:"currency"`
+		Amount    int    `json:"amount"`
+		Currency  string `json:"currency"`
+		Formatted string `json:"formatted"`
 	} `json:"price"`
 
 	AvailableSeats int      `json:"available_seats"`

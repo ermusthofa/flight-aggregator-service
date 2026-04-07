@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/ermusthofa/flight-aggregator-service/internal/domain"
@@ -67,6 +68,7 @@ func ToFlightDTOs(flights []domain.Flight) []dto.Flight {
 		// price
 		item.Price.Amount = f.Price.Amount
 		item.Price.Currency = f.Price.Currency
+		item.Price.Formatted = formatThousandSeparator(f.Price.Amount)
 
 		// aircraft (nullable)
 		if f.Aircraft != "" {
@@ -87,4 +89,19 @@ func formatDuration(minutes int) string {
 	h := minutes / 60
 	m := minutes % 60
 	return fmt.Sprintf("%dh %dm", h, m)
+}
+
+func formatThousandSeparator(n int) string {
+	s := strconv.Itoa(n)
+	if len(s) <= 3 {
+		return s
+	}
+	var result []byte
+	for i, c := range s {
+		if i > 0 && (len(s)-i)%3 == 0 {
+			result = append(result, '.')
+		}
+		result = append(result, byte(c))
+	}
+	return string(result)
 }
