@@ -59,6 +59,13 @@ func (m *mockProvider) Search(ctx context.Context, req domain.SearchRequest) ([]
 	return m.flights, nil
 }
 
+// mockProvider implements pkg.Logger
+type mockLogger struct{}
+
+func (m *mockLogger) Info(ctx context.Context, format string, v ...interface{})  {}
+func (m *mockLogger) Error(ctx context.Context, format string, v ...interface{}) {}
+func (m *mockLogger) Warn(ctx context.Context, format string, v ...interface{})  {}
+
 // helper to create a flight with given origin/destination/date/cabin/passengers
 // (passengers used for seat availability, but we'll just set seats high enough)
 func makeFlight(id, origin, dest, departDate, cabin string, seats int) domain.Flight {
@@ -78,8 +85,9 @@ func makeFlight(id, origin, dest, departDate, cabin string, seats int) domain.Fl
 func TestSearchFlightsUsecase_InvalidRequest(t *testing.T) {
 	cache := newMockCache()
 	providers := []partner.Provider{}
+	logger := &mockLogger{}
 	cfg := &UsecaseConfig{ProviderTimeout: 1 * time.Second, CacheTTL: 5 * time.Minute}
-	uc := NewSearchFlightsUsecase(cache, providers, cfg)
+	uc := NewSearchFlightsUsecase(cache, providers, cfg, logger)
 
 	req := domain.SearchRequest{
 		Origin:      "", // invalid
@@ -94,8 +102,9 @@ func TestSearchFlightsUsecase_InvalidRequest(t *testing.T) {
 func TestSearchFlightsUsecase_CacheHit(t *testing.T) {
 	cache := newMockCache()
 	providers := []partner.Provider{} // not used on cache hit
+	logger := &mockLogger{}
 	cfg := &UsecaseConfig{ProviderTimeout: 1 * time.Second, CacheTTL: 5 * time.Minute}
-	uc := NewSearchFlightsUsecase(cache, providers, cfg)
+	uc := NewSearchFlightsUsecase(cache, providers, cfg, logger)
 
 	// Pre-populate cache
 	cachedFlights := []domain.Flight{
@@ -139,8 +148,9 @@ func TestSearchFlightsUsecase_CacheMiss_Success(t *testing.T) {
 		flights: []domain.Flight{makeFlight("B1", "CGK", "DPS", "2025-12-15", "economy", 10)},
 	}
 	providers := []partner.Provider{provider1, provider2}
+	logger := &mockLogger{}
 	cfg := &UsecaseConfig{ProviderTimeout: 2 * time.Second, CacheTTL: 5 * time.Minute}
-	uc := NewSearchFlightsUsecase(cache, providers, cfg)
+	uc := NewSearchFlightsUsecase(cache, providers, cfg, logger)
 
 	req := domain.SearchRequest{
 		Origin:        "CGK",
@@ -186,8 +196,9 @@ func TestSearchFlightsUsecase_PartialProviderFailure(t *testing.T) {
 		err:  errors.New("network error"),
 	}
 	providers := []partner.Provider{providerGood, providerBad}
+	logger := &mockLogger{}
 	cfg := &UsecaseConfig{ProviderTimeout: 1 * time.Second, CacheTTL: 5 * time.Minute}
-	uc := NewSearchFlightsUsecase(cache, providers, cfg)
+	uc := NewSearchFlightsUsecase(cache, providers, cfg, logger)
 
 	req := domain.SearchRequest{
 		Origin:        "CGK",
@@ -226,8 +237,9 @@ func TestSearchFlightsUsecase_ProviderTimeout(t *testing.T) {
 		flights: []domain.Flight{makeFlight("F1", "CGK", "DPS", "2025-12-15", "economy", 5)},
 	}
 	providers := []partner.Provider{slowProvider, fastProvider}
+	logger := &mockLogger{}
 	cfg := &UsecaseConfig{ProviderTimeout: 200 * time.Millisecond} // shorter than slow provider
-	uc := NewSearchFlightsUsecase(cache, providers, cfg)
+	uc := NewSearchFlightsUsecase(cache, providers, cfg, logger)
 
 	req := domain.SearchRequest{
 		Origin:        "CGK",
@@ -262,8 +274,9 @@ func TestSearchFlightsUsecase_FilterAndSort(t *testing.T) {
 		},
 	}
 	providers := []partner.Provider{provider}
+	logger := &mockLogger{}
 	cfg := &UsecaseConfig{ProviderTimeout: 1 * time.Second, CacheTTL: 5 * time.Minute}
-	uc := NewSearchFlightsUsecase(cache, providers, cfg)
+	uc := NewSearchFlightsUsecase(cache, providers, cfg, logger)
 
 	req := domain.SearchRequest{
 		Origin:        "CGK",

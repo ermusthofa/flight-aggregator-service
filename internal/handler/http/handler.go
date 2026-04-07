@@ -11,12 +11,14 @@ import (
 )
 
 type Handler struct {
+	logger   pkg.Logger
 	searchUC usecase.SearchFlightsUsecaseInterface
 	router   http.Handler
 }
 
-func NewHandler(uc usecase.SearchFlightsUsecaseInterface) *Handler {
+func NewHandler(uc usecase.SearchFlightsUsecaseInterface, logger pkg.Logger) *Handler {
 	h := &Handler{
+		logger:   logger,
 		searchUC: uc,
 	}
 	r := mux.NewRouter()
@@ -37,7 +39,7 @@ func NewHandler(uc usecase.SearchFlightsUsecaseInterface) *Handler {
 	r.Use(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 			ctx := req.Context()
-			pkg.Info(ctx, "incoming request: %s %s", req.Method, req.URL.Path)
+			h.logger.Info(ctx, "incoming request: %s %s", req.Method, req.URL.Path)
 			next.ServeHTTP(w, req)
 		})
 	})

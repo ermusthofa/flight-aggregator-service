@@ -10,15 +10,17 @@ import (
 	"github.com/ermusthofa/flight-aggregator-service/internal/domain"
 	"github.com/ermusthofa/flight-aggregator-service/internal/partner/mock"
 	ratelimit "github.com/ermusthofa/flight-aggregator-service/internal/partner/ratelimiter"
+	"github.com/ermusthofa/flight-aggregator-service/internal/pkg"
 )
 
 type AirAsiaProvider struct {
+	logger  pkg.Logger
 	limiter *ratelimit.RateLimiter
 }
 
-func NewAirAsiaProvider() *AirAsiaProvider {
+func NewAirAsiaProvider(logger pkg.Logger) *AirAsiaProvider {
 	// Allow 100 requests per second
-	return &AirAsiaProvider{limiter: ratelimit.New(100, time.Second)}
+	return &AirAsiaProvider{logger: logger, limiter: ratelimit.New(100, time.Second)}
 }
 
 type airAsiaResponse struct {
@@ -72,18 +74,18 @@ func (p *AirAsiaProvider) Search(ctx context.Context, req domain.SearchRequest) 
 		// Parse times
 		dep, err := time.Parse(time.RFC3339, f.DepartTime)
 		if err != nil {
-			warnSkip(ctx, p.Name(), f.FlightCode, "parse departure time", err)
+			warnSkip(ctx, p.logger, p.Name(), f.FlightCode, "parse departure time", err)
 			continue
 		}
 		arr, err := time.Parse(time.RFC3339, f.ArriveTime)
 		if err != nil {
-			warnSkip(ctx, p.Name(), f.FlightCode, "parse arrival time", err)
+			warnSkip(ctx, p.logger, p.Name(), f.FlightCode, "parse arrival time", err)
 			continue
 		}
 
 		// Validate arrival after departure
 		if arr.Before(dep) {
-			warnSkip(ctx, p.Name(), f.FlightCode, "arrival before departure", nil)
+			warnSkip(ctx, p.logger, p.Name(), f.FlightCode, "arrival before departure", nil)
 			continue
 		}
 

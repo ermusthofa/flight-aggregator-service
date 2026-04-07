@@ -24,17 +24,20 @@ type SearchFlightsUsecase struct {
 	sorter    *SorterEngine
 	scorer    *ScoringEngine
 	config    *UsecaseConfig
+	logger    pkg.Logger
 }
 
 func NewSearchFlightsUsecase(
 	cache repository.Cache,
 	providers []partner.Provider,
 	cfg *UsecaseConfig,
+	logger pkg.Logger,
 ) *SearchFlightsUsecase {
 	return &SearchFlightsUsecase{
 		cache:     cache,
 		providers: providers,
 		config:    cfg,
+		logger:    logger,
 		filter:    NewFilterEngine(),
 		sorter:    NewSorterEngine(),
 		scorer:    NewScoringEngine(),
@@ -98,7 +101,7 @@ func (uc *SearchFlightsUsecase) Execute(ctx context.Context, req domain.SearchRe
 	for res := range results {
 		if res.err != nil {
 			metadata.ProvidersFailed++
-			pkg.Error(ctx, "provider %s failed to fetch: %v", res.name, res.err)
+			uc.logger.Error(ctx, "provider %s failed to fetch: %v", res.name, res.err)
 			continue
 		}
 		metadata.ProvidersSucceeded++

@@ -78,10 +78,10 @@ func parseWithTimezone(dateStr, iana string) (time.Time, error) {
 	return time.ParseInLocation("2006-01-02T15:04:05", dateStr, loc)
 }
 
-func warnSkip(ctx context.Context, provider, flightNumber, reason string, err error) {
+func warnSkip(ctx context.Context, logger pkg.Logger, provider, flightNumber, reason string, err error) {
 	if err != nil {
-		pkg.Warn(ctx, "%s: skip flight %s: %s: %v", provider, flightNumber, reason, err)
+		logger.Warn(ctx, "%s: skip flight %s: %s: %v", provider, flightNumber, reason, err)
 	} else {
-		pkg.Warn(ctx, "%s: skip flight %s: %s", provider, flightNumber, reason)
+		logger.Warn(ctx, "%s: skip flight %s: %s", provider, flightNumber, reason)
 	}
 }

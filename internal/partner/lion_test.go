@@ -11,7 +11,8 @@ import (
 )
 
 func TestLionProvider_Search_Success(t *testing.T) {
-	provider := NewLionProvider()
+	logger := &mockLogger{}
+	provider := NewLionProvider(logger)
 
 	req := domain.SearchRequest{
 		Origin:        "CGK",
@@ -204,7 +205,8 @@ func TestLionProvider_Search_Success(t *testing.T) {
 }
 
 func TestLionProvider_Search_FilterByRoute(t *testing.T) {
-	provider := NewLionProvider()
+	logger := &mockLogger{}
+	provider := NewLionProvider(logger)
 	req := domain.SearchRequest{
 		Origin:        "SUB",
 		Destination:   "DPS",
@@ -222,7 +224,8 @@ func TestLionProvider_Search_FilterByRoute(t *testing.T) {
 }
 
 func TestLionProvider_Search_FilterByDate(t *testing.T) {
-	provider := NewLionProvider()
+	logger := &mockLogger{}
+	provider := NewLionProvider(logger)
 	req := domain.SearchRequest{
 		Origin:        "CGK",
 		Destination:   "DPS",
@@ -240,7 +243,8 @@ func TestLionProvider_Search_FilterByDate(t *testing.T) {
 }
 
 func TestLionProvider_Search_FilterBySeats(t *testing.T) {
-	provider := NewLionProvider()
+	logger := &mockLogger{}
+	provider := NewLionProvider(logger)
 	req := domain.SearchRequest{
 		Origin:        "CGK",
 		Destination:   "DPS",
@@ -258,7 +262,8 @@ func TestLionProvider_Search_FilterBySeats(t *testing.T) {
 }
 
 func TestLionProvider_Search_FilterByCabinClass(t *testing.T) {
-	provider := NewLionProvider()
+	logger := &mockLogger{}
+	provider := NewLionProvider(logger)
 	// All flights have fare_type "ECONOMY" -> maps to economy. Business should return none.
 	req := domain.SearchRequest{
 		Origin:        "CGK",
@@ -278,7 +283,8 @@ func TestLionProvider_Search_FilterByCabinClass(t *testing.T) {
 }
 
 func TestLionProvider_Search_ContextCancellation(t *testing.T) {
-	provider := NewLionProvider()
+	logger := &mockLogger{}
+	provider := NewLionProvider(logger)
 	req := domain.SearchRequest{
 		Origin:        "CGK",
 		Destination:   "DPS",

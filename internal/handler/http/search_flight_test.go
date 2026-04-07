@@ -23,9 +23,17 @@ func (m *mockSearchUsecase) Execute(ctx context.Context, req domain.SearchReques
 	return m.executeFunc(ctx, req)
 }
 
+// mockProvider implements pkg.Logger
+type mockLogger struct{}
+
+func (m *mockLogger) Info(ctx context.Context, format string, v ...interface{})  {}
+func (m *mockLogger) Error(ctx context.Context, format string, v ...interface{}) {}
+func (m *mockLogger) Warn(ctx context.Context, format string, v ...interface{})  {}
+
 func TestHandler_ServeHTTP_Routing(t *testing.T) {
 	uc := &mockSearchUsecase{}
-	handler := NewHandler(uc)
+	logger := &mockLogger{}
+	handler := NewHandler(uc, logger)
 
 	tests := []struct {
 		name           string
@@ -140,7 +148,8 @@ func TestHandler_SearchFlights(t *testing.T) {
 			if tt.mockExecute != nil {
 				uc.executeFunc = tt.mockExecute
 			}
-			handler := NewHandler(uc)
+			logger := &mockLogger{}
+			handler := NewHandler(uc, logger)
 			req := httptest.NewRequest("POST", "/search", bytes.NewBufferString(tt.requestBody))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
@@ -193,7 +202,8 @@ func TestHandler_RequestIDHeader(t *testing.T) {
 			return []domain.Flight{}, domain.Metadata{}, nil
 		},
 	}
-	handler := NewHandler(uc)
+	logger := &mockLogger{}
+	handler := NewHandler(uc, logger)
 	reqBody := bytes.NewReader([]byte(`{"origin":"CGK","destination":"DPS","departureDate":"2025-12-15","passengers":1}`))
 	req := httptest.NewRequest("POST", "/search", reqBody)
 	req.Header.Set("X-Request-ID", "test-123")

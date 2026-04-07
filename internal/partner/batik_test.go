@@ -11,7 +11,8 @@ import (
 )
 
 func TestBatikProvider_Search_Success(t *testing.T) {
-	provider := NewBatikProvider()
+	logger := &mockLogger{}
+	provider := NewBatikProvider(logger)
 
 	req := domain.SearchRequest{
 		Origin:        "CGK",
@@ -164,7 +165,8 @@ func TestBatikProvider_Search_Success(t *testing.T) {
 }
 
 func TestBatikProvider_Search_FilterByRoute(t *testing.T) {
-	provider := NewBatikProvider()
+	logger := &mockLogger{}
+	provider := NewBatikProvider(logger)
 	req := domain.SearchRequest{
 		Origin:        "SUB",
 		Destination:   "DPS",
@@ -182,7 +184,8 @@ func TestBatikProvider_Search_FilterByRoute(t *testing.T) {
 }
 
 func TestBatikProvider_Search_FilterByDate(t *testing.T) {
-	provider := NewBatikProvider()
+	logger := &mockLogger{}
+	provider := NewBatikProvider(logger)
 	req := domain.SearchRequest{
 		Origin:        "CGK",
 		Destination:   "DPS",
@@ -200,7 +203,8 @@ func TestBatikProvider_Search_FilterByDate(t *testing.T) {
 }
 
 func TestBatikProvider_Search_FilterBySeats(t *testing.T) {
-	provider := NewBatikProvider()
+	logger := &mockLogger{}
+	provider := NewBatikProvider(logger)
 	req := domain.SearchRequest{
 		Origin:        "CGK",
 		Destination:   "DPS",
@@ -218,7 +222,8 @@ func TestBatikProvider_Search_FilterBySeats(t *testing.T) {
 }
 
 func TestBatikProvider_Search_FilterByCabinClass(t *testing.T) {
-	provider := NewBatikProvider()
+	logger := &mockLogger{}
+	provider := NewBatikProvider(logger)
 	// All flights have class "Y" -> economy. Business class should yield none.
 	req := domain.SearchRequest{
 		Origin:        "CGK",
@@ -238,7 +243,8 @@ func TestBatikProvider_Search_FilterByCabinClass(t *testing.T) {
 }
 
 func TestBatikProvider_Search_ContextCancellation(t *testing.T) {
-	provider := NewBatikProvider()
+	logger := &mockLogger{}
+	provider := NewBatikProvider(logger)
 	req := domain.SearchRequest{
 		Origin:        "CGK",
 		Destination:   "DPS",

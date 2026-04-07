@@ -12,7 +12,8 @@ import (
 )
 
 func TestGarudaProvider_Search_Success(t *testing.T) {
-	provider := NewGarudaProvider()
+	logger := &mockLogger{}
+	provider := NewGarudaProvider(logger)
 
 	req := domain.SearchRequest{
 		Origin:        "CGK",
@@ -178,7 +179,8 @@ func TestGarudaProvider_Search_Success(t *testing.T) {
 }
 
 func TestGarudaProvider_Search_FilterByRoute(t *testing.T) {
-	provider := NewGarudaProvider()
+	logger := &mockLogger{}
+	provider := NewGarudaProvider(logger)
 	req := domain.SearchRequest{
 		Origin:        "SUB",
 		Destination:   "DPS",
@@ -196,7 +198,8 @@ func TestGarudaProvider_Search_FilterByRoute(t *testing.T) {
 }
 
 func TestGarudaProvider_Search_FilterByDate(t *testing.T) {
-	provider := NewGarudaProvider()
+	logger := &mockLogger{}
+	provider := NewGarudaProvider(logger)
 	req := domain.SearchRequest{
 		Origin:        "CGK",
 		Destination:   "DPS",
@@ -214,7 +217,8 @@ func TestGarudaProvider_Search_FilterByDate(t *testing.T) {
 }
 
 func TestGarudaProvider_Search_FilterBySeats(t *testing.T) {
-	provider := NewGarudaProvider()
+	logger := &mockLogger{}
+	provider := NewGarudaProvider(logger)
 	req := domain.SearchRequest{
 		Origin:        "CGK",
 		Destination:   "DPS",
@@ -232,7 +236,8 @@ func TestGarudaProvider_Search_FilterBySeats(t *testing.T) {
 }
 
 func TestGarudaProvider_Search_FilterByCabinClass(t *testing.T) {
-	provider := NewGarudaProvider()
+	logger := &mockLogger{}
+	provider := NewGarudaProvider(logger)
 	// All flights are economy, so business should return none
 	req := domain.SearchRequest{
 		Origin:        "CGK",
@@ -252,7 +257,8 @@ func TestGarudaProvider_Search_FilterByCabinClass(t *testing.T) {
 }
 
 func TestGarudaProvider_Search_ContextCancellation(t *testing.T) {
-	provider := NewGarudaProvider()
+	logger := &mockLogger{}
+	provider := NewGarudaProvider(logger)
 	req := domain.SearchRequest{
 		Origin:        "CGK",
 		Destination:   "DPS",

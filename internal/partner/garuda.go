@@ -10,15 +10,17 @@ import (
 	"github.com/ermusthofa/flight-aggregator-service/internal/domain"
 	"github.com/ermusthofa/flight-aggregator-service/internal/partner/mock"
 	ratelimit "github.com/ermusthofa/flight-aggregator-service/internal/partner/ratelimiter"
+	"github.com/ermusthofa/flight-aggregator-service/internal/pkg"
 )
 
 type GarudaProvider struct {
+	logger  pkg.Logger
 	limiter *ratelimit.RateLimiter
 }
 
-func NewGarudaProvider() *GarudaProvider {
+func NewGarudaProvider(logger pkg.Logger) *GarudaProvider {
 	// Allow 100 requests per second
-	return &GarudaProvider{limiter: ratelimit.New(100, time.Second)}
+	return &GarudaProvider{logger: logger, limiter: ratelimit.New(100, time.Second)}
 }
 
 type garudaResponse struct {
@@ -99,12 +101,12 @@ func (p *GarudaProvider) Search(ctx context.Context, req domain.SearchRequest) (
 			var err error
 			dep, err = time.Parse(time.RFC3339, firstSeg.Departure.Time)
 			if err != nil {
-				warnSkip(ctx, p.Name(), f.FlightID, "parse departure time", err)
+				warnSkip(ctx, p.logger, p.Name(), f.FlightID, "parse departure time", err)
 				continue
 			}
 			arr, err = time.Parse(time.RFC3339, lastSeg.Arrival.Time)
 			if err != nil {
-				warnSkip(ctx, p.Name(), f.FlightID, "parse arrival time", err)
+				warnSkip(ctx, p.logger, p.Name(), f.FlightID, "parse arrival time", err)
 				continue
 			}
 			stops = len(f.Segments) - 1
@@ -116,12 +118,12 @@ func (p *GarudaProvider) Search(ctx context.Context, req domain.SearchRequest) (
 			var err error
 			dep, err = time.Parse(time.RFC3339, f.Departure.Time)
 			if err != nil {
-				warnSkip(ctx, p.Name(), f.FlightID, "parse departure time", err)
+				warnSkip(ctx, p.logger, p.Name(), f.FlightID, "parse departure time", err)
 				continue
 			}
 			arr, err = time.Parse(time.RFC3339, f.Arrival.Time)
 			if err != nil {
-				warnSkip(ctx, p.Name(), f.FlightID, "parse arrival time", err)
+				warnSkip(ctx, p.logger, p.Name(), f.FlightID, "parse arrival time", err)
 				continue
 			}
 			stops = f.Stops
@@ -131,7 +133,7 @@ func (p *GarudaProvider) Search(ctx context.Context, req domain.SearchRequest) (
 		}
 
 		if arr.Before(dep) {
-			warnSkip(ctx, p.Name(), f.FlightID, "arrival before departure", nil)
+			warnSkip(ctx, p.logger, p.Name(), f.FlightID, "arrival before departure", nil)
 			continue
 		}
 

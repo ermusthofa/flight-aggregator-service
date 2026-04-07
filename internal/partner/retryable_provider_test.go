@@ -29,13 +29,21 @@ func (m *mockProvider) Search(ctx context.Context, req domain.SearchRequest) ([]
 	return m.successData, nil
 }
 
+// mockProvider implements pkg.Logger
+type mockLogger struct{}
+
+func (m *mockLogger) Info(ctx context.Context, format string, v ...interface{})  {}
+func (m *mockLogger) Error(ctx context.Context, format string, v ...interface{}) {}
+func (m *mockLogger) Warn(ctx context.Context, format string, v ...interface{})  {}
+
 func TestRetryableProvider_SuccessFirstAttempt(t *testing.T) {
 	mock := &mockProvider{
 		name:        "TestProvider",
 		failures:    []error{nil}, // first attempt success
 		successData: []domain.Flight{{ID: "test"}},
 	}
-	retryable := NewRetryable(mock, 2, 10*time.Millisecond)
+	logger := &mockLogger{}
+	retryable := NewRetryable(mock, 2, 10*time.Millisecond, logger)
 
 	ctx := context.Background()
 	req := domain.SearchRequest{Origin: "CGK", Destination: "DPS"}
@@ -58,7 +66,8 @@ func TestRetryableProvider_SuccessAfterRetries(t *testing.T) {
 		failures:    []error{errors.New("fail1"), errors.New("fail2"), nil},
 		successData: []domain.Flight{{ID: "success"}},
 	}
-	retryable := NewRetryable(mock, 2, 5*time.Millisecond) // maxRetries=2 → attempts 0,1,2 (3 total)
+	logger := &mockLogger{}
+	retryable := NewRetryable(mock, 2, 5*time.Millisecond, logger) // maxRetries=2 → attempts 0,1,2 (3 total)
 
 	ctx := context.Background()
 	req := domain.SearchRequest{}
@@ -87,7 +96,8 @@ func TestRetryableProvider_MaxRetriesExceeded(t *testing.T) {
 		name:     "TestProvider",
 		failures: []error{errors.New("err1"), errors.New("err2"), errors.New("err3")}, // 3 failures, maxRetries=2
 	}
-	retryable := NewRetryable(mock, 2, 1*time.Millisecond)
+	logger := &mockLogger{}
+	retryable := NewRetryable(mock, 2, 1*time.Millisecond, logger)
 
 	ctx := context.Background()
 	req := domain.SearchRequest{}
@@ -109,7 +119,8 @@ func TestRetryableProvider_ContextCancelledDuringDelay(t *testing.T) {
 		name:     "TestProvider",
 		failures: []error{errors.New("first fail"), nil}, // would succeed on second attempt
 	}
-	retryable := NewRetryable(mock, 2, 100*time.Millisecond) // long delay
+	logger := &mockLogger{}
+	retryable := NewRetryable(mock, 2, 100*time.Millisecond, logger) // long delay
 
 	ctx, cancel := context.WithCancel(context.Background())
 	// Cancel after short time to interrupt the delay
@@ -138,7 +149,8 @@ func TestRetryableProvider_NoRetryOnContextDoneBeforeAttempt(t *testing.T) {
 		name:     "TestProvider",
 		failures: []error{errors.New("fail")},
 	}
-	retryable := NewRetryable(mock, 2, 10*time.Millisecond)
+	logger := &mockLogger{}
+	retryable := NewRetryable(mock, 2, 10*time.Millisecond, logger)
 
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // already cancelled
@@ -157,7 +169,8 @@ func TestRetryableProvider_NoRetryOnContextDoneBeforeAttempt(t *testing.T) {
 
 func TestRetryableProvider_NamePropagation(t *testing.T) {
 	mock := &mockProvider{name: "MockAirline"}
-	retryable := NewRetryable(mock, 3, time.Millisecond)
+	logger := &mockLogger{}
+	retryable := NewRetryable(mock, 3, time.Millisecond, logger)
 	if retryable.Name() != "MockAirline" {
 		t.Errorf("expected name 'MockAirline', got %s", retryable.Name())
 	}
@@ -168,8 +181,9 @@ func TestRetryableProvider_ExponentialBackoff(t *testing.T) {
 		name:     "BackoffTest",
 		failures: []error{errors.New("fail1"), errors.New("fail2"), nil}, // 2 retries needed
 	}
+	logger := &mockLogger{}
 	baseDelay := 10 * time.Millisecond
-	retryable := NewRetryable(mock, 2, baseDelay)
+	retryable := NewRetryable(mock, 2, baseDelay, logger)
 
 	ctx := context.Background()
 	req := domain.SearchRequest{}

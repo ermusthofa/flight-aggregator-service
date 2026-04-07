@@ -13,10 +13,11 @@ type RetryableProvider struct {
 	inner      Provider
 	maxRetries int
 	baseDelay  time.Duration
+	logger     pkg.Logger
 }
 
-func NewRetryable(inner Provider, maxRetries int, baseDelay time.Duration) *RetryableProvider {
-	return &RetryableProvider{inner: inner, maxRetries: maxRetries, baseDelay: baseDelay}
+func NewRetryable(inner Provider, maxRetries int, baseDelay time.Duration, logger pkg.Logger) *RetryableProvider {
+	return &RetryableProvider{inner: inner, maxRetries: maxRetries, baseDelay: baseDelay, logger: logger}
 }
 
 func (r *RetryableProvider) Name() string { return r.inner.Name() }
@@ -34,7 +35,7 @@ func (r *RetryableProvider) Search(ctx context.Context, req domain.SearchRequest
 		if attempt == r.maxRetries {
 			break
 		}
-		pkg.Warn(ctx, "provider %s attempt %d/%d failed: %v, retrying in %v", r.inner.Name(), attempt+1, r.maxRetries, err, delay)
+		r.logger.Warn(ctx, "provider %s attempt %d/%d failed: %v, retrying in %v", r.inner.Name(), attempt+1, r.maxRetries, err, delay)
 		select {
 		case <-time.After(delay):
 			delay *= 2

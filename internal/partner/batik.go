@@ -12,15 +12,17 @@ import (
 	"github.com/ermusthofa/flight-aggregator-service/internal/domain"
 	"github.com/ermusthofa/flight-aggregator-service/internal/partner/mock"
 	ratelimit "github.com/ermusthofa/flight-aggregator-service/internal/partner/ratelimiter"
+	"github.com/ermusthofa/flight-aggregator-service/internal/pkg"
 )
 
 type BatikProvider struct {
+	logger  pkg.Logger
 	limiter *ratelimit.RateLimiter
 }
 
-func NewBatikProvider() *BatikProvider {
+func NewBatikProvider(logger pkg.Logger) *BatikProvider {
 	// 2 requests per minute
-	return &BatikProvider{limiter: ratelimit.New(2, time.Minute)}
+	return &BatikProvider{logger: logger, limiter: ratelimit.New(2, time.Minute)}
 }
 
 type batikResponse struct {
@@ -75,17 +77,17 @@ func (p *BatikProvider) Search(ctx context.Context, req domain.SearchRequest) ([
 	for _, f := range resp.Results {
 		dep, err := time.Parse("2006-01-02T15:04:05-0700", f.Departure)
 		if err != nil {
-			warnSkip(ctx, p.Name(), f.FlightNumber, "parse departure time", err)
+			warnSkip(ctx, p.logger, p.Name(), f.FlightNumber, "parse departure time", err)
 			continue
 		}
 		arr, err := time.Parse("2006-01-02T15:04:05-0700", f.Arrival)
 		if err != nil {
-			warnSkip(ctx, p.Name(), f.FlightNumber, "parse arrival time", err)
+			warnSkip(ctx, p.logger, p.Name(), f.FlightNumber, "parse arrival time", err)
 			continue
 		}
 
 		if arr.Before(dep) {
-			warnSkip(ctx, p.Name(), f.FlightNumber, "arrival before departure", nil)
+			warnSkip(ctx, p.logger, p.Name(), f.FlightNumber, "arrival before departure", nil)
 			continue
 		}
 

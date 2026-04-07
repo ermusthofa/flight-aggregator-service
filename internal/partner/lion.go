@@ -10,15 +10,17 @@ import (
 	"github.com/ermusthofa/flight-aggregator-service/internal/domain"
 	"github.com/ermusthofa/flight-aggregator-service/internal/partner/mock"
 	ratelimit "github.com/ermusthofa/flight-aggregator-service/internal/partner/ratelimiter"
+	"github.com/ermusthofa/flight-aggregator-service/internal/pkg"
 )
 
 type LionProvider struct {
+	logger  pkg.Logger
 	limiter *ratelimit.RateLimiter
 }
 
-func NewLionProvider() *LionProvider {
+func NewLionProvider(logger pkg.Logger) *LionProvider {
 	// Allow 100 requests per second
-	return &LionProvider{limiter: ratelimit.New(100, time.Second)}
+	return &LionProvider{logger: logger, limiter: ratelimit.New(100, time.Second)}
 }
 
 type lionResponse struct {
@@ -96,17 +98,17 @@ func (p *LionProvider) Search(ctx context.Context, req domain.SearchRequest) ([]
 		// Parse times with timezone mapping (WIB/WITA/WIT)
 		dep, err := parseWithTimezone(f.Schedule.Departure, f.Schedule.DepartureTimezone)
 		if err != nil {
-			warnSkip(ctx, p.Name(), f.ID, "parse departure time", err)
+			warnSkip(ctx, p.logger, p.Name(), f.ID, "parse departure time", err)
 			continue
 		}
 		arr, err := parseWithTimezone(f.Schedule.Arrival, f.Schedule.ArrivalTimezone)
 		if err != nil {
-			warnSkip(ctx, p.Name(), f.ID, "parse arrival time", err)
+			warnSkip(ctx, p.logger, p.Name(), f.ID, "parse arrival time", err)
 			continue
 		}
 
 		if arr.Before(dep) {
-			warnSkip(ctx, p.Name(), f.ID, "arrival before departure", err)
+			warnSkip(ctx, p.logger, p.Name(), f.ID, "arrival before departure", err)
 			continue
 		}
 

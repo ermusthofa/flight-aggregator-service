@@ -13,7 +13,8 @@ import (
 
 func TestAirAsiaProvider_Search_Success(t *testing.T) {
 	rand.Seed(1)
-	provider := NewAirAsiaProvider()
+	logger := &mockLogger{}
+	provider := NewAirAsiaProvider(logger)
 
 	req := domain.SearchRequest{
 		Origin:        "CGK",
@@ -158,7 +159,8 @@ func TestAirAsiaProvider_Search_Success(t *testing.T) {
 
 func TestAirAsiaProvider_Search_FilterByRoute(t *testing.T) {
 	rand.Seed(1)
-	provider := NewAirAsiaProvider()
+	logger := &mockLogger{}
+	provider := NewAirAsiaProvider(logger)
 
 	req := domain.SearchRequest{
 		Origin:        "SUB",
@@ -179,7 +181,8 @@ func TestAirAsiaProvider_Search_FilterByRoute(t *testing.T) {
 
 func TestAirAsiaProvider_Search_FilterByDate(t *testing.T) {
 	rand.Seed(1)
-	provider := NewAirAsiaProvider()
+	logger := &mockLogger{}
+	provider := NewAirAsiaProvider(logger)
 
 	req := domain.SearchRequest{
 		Origin:        "CGK",
@@ -200,7 +203,8 @@ func TestAirAsiaProvider_Search_FilterByDate(t *testing.T) {
 
 func TestAirAsiaProvider_Search_FilterBySeats(t *testing.T) {
 	rand.Seed(1)
-	provider := NewAirAsiaProvider()
+	logger := &mockLogger{}
+	provider := NewAirAsiaProvider(logger)
 
 	req := domain.SearchRequest{
 		Origin:        "CGK",
@@ -222,7 +226,8 @@ func TestAirAsiaProvider_Search_FilterBySeats(t *testing.T) {
 
 func TestAirAsiaProvider_Search_FilterByCabinClass(t *testing.T) {
 	rand.Seed(1)
-	provider := NewAirAsiaProvider()
+	logger := &mockLogger{}
+	provider := NewAirAsiaProvider(logger)
 
 	req := domain.SearchRequest{
 		Origin:        "CGK",
@@ -243,7 +248,8 @@ func TestAirAsiaProvider_Search_FilterByCabinClass(t *testing.T) {
 }
 
 func TestAirAsiaProvider_Search_SimulatedFailure(t *testing.T) {
-	provider := NewAirAsiaProvider()
+	logger := &mockLogger{}
+	provider := NewAirAsiaProvider(logger)
 	req := domain.SearchRequest{
 		Origin:        "CGK",
 		Destination:   "DPS",
@@ -267,7 +273,8 @@ func TestAirAsiaProvider_Search_SimulatedFailure(t *testing.T) {
 }
 
 func TestAirAsiaProvider_Search_ContextCancellation(t *testing.T) {
-	provider := NewAirAsiaProvider()
+	logger := &mockLogger{}
+	provider := NewAirAsiaProvider(logger)
 	req := domain.SearchRequest{
 		Origin:        "CGK",
 		Destination:   "DPS",
