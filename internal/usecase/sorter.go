@@ -1,4 +1,4 @@
-package service
+package usecase
 
 import (
 	"sort"
@@ -6,7 +6,13 @@ import (
 	"github.com/ermusthofa/flight-aggregator-service/internal/domain"
 )
 
-func SortFlights(flights []domain.Flight, sortBy string) {
+type SorterEngine struct{}
+
+func NewSorterEngine() *SorterEngine {
+	return &SorterEngine{}
+}
+
+func (s *SorterEngine) Sort(flights []domain.Flight, sortBy string) {
 	sort.SliceStable(flights, func(i, j int) bool {
 
 		switch sortBy {

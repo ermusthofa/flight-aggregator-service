@@ -3,48 +3,42 @@ package domain
 import "time"
 
 type Flight struct {
-	ID           string  `json:"id"`
-	Provider     string  `json:"provider"`
-	Airline      Airline `json:"airline"`
-	FlightNumber string  `json:"flight_number"`
+	ID             string
+	Provider       string
+	Airline        Airline
+	FlightNumber   string
+	Departure      Location
+	Arrival        Location
+	TotalMinutes   int
+	Stops          int
+	Price          Price
+	AvailableSeats int
+	CabinClass     string
+	Aircraft       string
+	Amenities      []string
+	Baggage        Baggage
 
-	Departure Location `json:"departure"`
-	Arrival   Location `json:"arrival"`
-
-	TotalMinutes int `json:"total_minutes"`
-
-	Stops int `json:"stops"`
-
-	Price Price `json:"price"`
-
-	AvailableSeats int      `json:"available_seats"`
-	CabinClass     string   `json:"cabin_class"`
-	Aircraft       string   `json:"aircraft"`
-	Amenities      []string `json:"amenities"`
-
-	Baggage Baggage `json:"baggage"`
-
-	Score int `json:"-"`
+	Score int
 }
 
 type Airline struct {
-	Name string `json:"name"`
-	Code string `json:"code"`
+	Name string
+	Code string
 }
 
 type Location struct {
-	Airport   string    `json:"airport"`
-	City      string    `json:"city"`
-	Datetime  time.Time `json:"datetime"`
-	Timestamp int64     `json:"timestamp"`
+	Airport   string
+	City      string
+	Datetime  time.Time
+	Timestamp int64
 }
 
 type Price struct {
-	Amount   int    `json:"amount"`
-	Currency string `json:"currency"`
+	Amount   int
+	Currency string
 }
 
 type Baggage struct {
-	CarryOn string `json:"carry_on"`
-	Checked string `json:"checked"`
+	CarryOn string
+	Checked string
 }

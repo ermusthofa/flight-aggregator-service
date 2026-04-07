@@ -1,4 +1,4 @@
-package service
+package usecase
 
 import (
 	"time"
@@ -6,7 +6,13 @@ import (
 	"github.com/ermusthofa/flight-aggregator-service/internal/domain"
 )
 
-func FilterFlights(flights []domain.Flight, req domain.SearchRequest) []domain.Flight {
+type FilterEngine struct{}
+
+func NewFilterEngine() *FilterEngine {
+	return &FilterEngine{}
+}
+
+func (s *FilterEngine) Apply(flights []domain.Flight, req domain.SearchRequest) []domain.Flight {
 	result := make([]domain.Flight, 0, len(flights))
 
 	var depFrom, depTo, arrFrom, arrTo *int

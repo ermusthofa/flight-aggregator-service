@@ -1,17 +1,39 @@
 package pkg
 
 import (
+	"context"
 	"log"
+	"os"
 )
 
-func Info(msg string, args ...interface{}) {
-	log.Printf("[INFO] "+msg, args...)
+var stdLogger = log.New(os.Stdout, "", log.LstdFlags|log.Lmicroseconds)
+
+// Info logs with request ID if present in context
+func Info(ctx context.Context, format string, v ...interface{}) {
+	id := GetRequestID(ctx)
+	if id != "" {
+		stdLogger.Printf("[INFO] [req=%s] "+format, append([]interface{}{id}, v...)...)
+	} else {
+		stdLogger.Printf("[INFO] "+format, v...)
+	}
 }
 
-func Warning(msg string, args ...interface{}) {
-	log.Printf("[WARNING] "+msg, args...)
+// Error logs with request ID
+func Error(ctx context.Context, format string, v ...interface{}) {
+	id := GetRequestID(ctx)
+	if id != "" {
+		stdLogger.Printf("[ERROR] [req=%s] "+format, append([]interface{}{id}, v...)...)
+	} else {
+		stdLogger.Printf("[ERROR] "+format, v...)
+	}
 }
 
-func Error(msg string, args ...interface{}) {
-	log.Printf("[ERROR] "+msg, args...)
+// Warn logs with request ID
+func Warn(ctx context.Context, format string, v ...interface{}) {
+	id := GetRequestID(ctx)
+	if id != "" {
+		stdLogger.Printf("[WARN] [req=%s] "+format, append([]interface{}{id}, v...)...)
+	} else {
+		stdLogger.Printf("[WARN] "+format, v...)
+	}
 }

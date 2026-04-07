@@ -1,61 +1,54 @@
-package provider
+package partner
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
 	"math/rand"
-	"os"
 	"time"
 
 	"github.com/ermusthofa/flight-aggregator-service/internal/domain"
+	"github.com/ermusthofa/flight-aggregator-service/internal/partner/mock"
 )
 
 type GarudaProvider struct{}
 
-func NewGarudaProvider() *GarudaProvider {
-	return &GarudaProvider{}
-}
+func NewGarudaProvider() *GarudaProvider { return &GarudaProvider{} }
 
 type garudaResponse struct {
 	Status  string `json:"status"`
 	Flights []struct {
-		FlightID string `json:"flight_id"`
-		Airline  string `json:"airline"`
-
-		Departure struct {
+		FlightID    string `json:"flight_id"`
+		Airline     string `json:"airline"`
+		AirlineCode string `json:"airline_code"`
+		Departure   struct {
 			Airport string `json:"airport"`
 			City    string `json:"city"`
 			Time    string `json:"time"`
 		} `json:"departure"`
-
 		Arrival struct {
 			Airport string `json:"airport"`
 			City    string `json:"city"`
 			Time    string `json:"time"`
 		} `json:"arrival"`
-
 		DurationMinutes int    `json:"duration_minutes"`
 		Stops           int    `json:"stops"`
 		Aircraft        string `json:"aircraft"`
-
-		Segments []struct {
+		Segments        []struct {
 			Departure struct {
 				Airport string `json:"airport"`
 				Time    string `json:"time"`
-			}
+			} `json:"departure"`
 			Arrival struct {
 				Airport string `json:"airport"`
 				Time    string `json:"time"`
-			}
+			} `json:"arrival"`
 			DurationMinutes int `json:"duration_minutes"`
 			LayoverMinutes  int `json:"layover_minutes"`
 		} `json:"segments"`
-
 		Price struct {
 			Amount int `json:"amount"`
 		} `json:"price"`
-
 		AvailableSeats int    `json:"available_seats"`
 		FareClass      string `json:"fare_class"`
 		Baggage        struct {
@@ -66,73 +59,70 @@ type garudaResponse struct {
 	} `json:"flights"`
 }
 
-func (p *GarudaProvider) Name() string {
-	return "Garuda"
-}
-
-func (p *GarudaProvider) MaxRetries() int {
-	return 1
-}
+func (p *GarudaProvider) Name() string { return "Garuda" }
 
 func (p *GarudaProvider) Search(ctx context.Context, req domain.SearchRequest) ([]domain.Flight, error) {
-
 	// simulate delay (50–100ms)
 	delay := time.Duration(50+rand.Intn(50)) * time.Millisecond
-
 	select {
 	case <-time.After(delay):
 	case <-ctx.Done():
 		return nil, ctx.Err()
 	}
 
-	data, err := os.ReadFile("internal/provider/mock/garuda_indonesia_search_response.json")
-	if err != nil {
-		return nil, err
-	}
-
 	var resp garudaResponse
-	if err := json.Unmarshal(data, &resp); err != nil {
-		return nil, err
+	if err := json.Unmarshal(mock.GarudaMock, &resp); err != nil {
+		return nil, fmt.Errorf("failed to parse garuda mock: %w", err)
 	}
 
-	result := make([]domain.Flight, 0)
-
+	var flights []domain.Flight
 	for _, f := range resp.Flights {
-
-		var dep time.Time
-		var arr time.Time
+		var dep, arr time.Time
 		var totalDuration int
 		var stops int
 
-		// multi-leg
 		if len(f.Segments) > 0 {
-
+			// Multi-leg flight
 			firstSeg := f.Segments[0]
 			lastSeg := f.Segments[len(f.Segments)-1]
-
-			dep, _ = time.Parse(time.RFC3339, firstSeg.Departure.Time)
-			arr, _ = time.Parse(time.RFC3339, lastSeg.Arrival.Time)
-
+			var err error
+			dep, err = time.Parse(time.RFC3339, firstSeg.Departure.Time)
+			if err != nil {
+				warnSkip(ctx, f.FlightID, "parse departure time", err)
+				continue
+			}
+			arr, err = time.Parse(time.RFC3339, lastSeg.Arrival.Time)
+			if err != nil {
+				warnSkip(ctx, f.FlightID, "parse arrival time", err)
+				continue
+			}
 			stops = len(f.Segments) - 1
-
 			totalDuration = int(arr.Sub(dep).Minutes())
-
 		} else {
-			// direct flight
-			dep, _ = time.Parse(time.RFC3339, f.Departure.Time)
-			arr, _ = time.Parse(time.RFC3339, f.Arrival.Time)
-
+			// Direct flight
+			var err error
+			dep, err = time.Parse(time.RFC3339, f.Departure.Time)
+			if err != nil {
+				warnSkip(ctx, f.FlightID, "parse departure time", err)
+				continue
+			}
+			arr, err = time.Parse(time.RFC3339, f.Arrival.Time)
+			if err != nil {
+				warnSkip(ctx, f.FlightID, "parse arrival time", err)
+				continue
+			}
 			stops = f.Stops
 			totalDuration = f.DurationMinutes
 		}
 
-		// apply search criteria
-		if !req.Matches(f.Departure.Airport, f.Arrival.Airport, dep, f.AvailableSeats, f.FareClass) {
+		if arr.Before(dep) {
+			warnSkip(ctx, f.FlightID, "arrival before departure", nil)
 			continue
 		}
 
-		// validate
-		if arr.Before(dep) {
+		cabinClass := normalizeCabinClass(f.FareClass)
+
+		if !matchesSearchCriteria(req, f.Departure.Airport, f.Arrival.Airport, dep, f.AvailableSeats, cabinClass) {
 			continue
 		}
 
@@ -142,7 +132,7 @@ func (p *GarudaProvider) Search(ctx context.Context, req domain.SearchRequest) (
 			FlightNumber:   f.FlightID,
 			Stops:          stops,
 			AvailableSeats: f.AvailableSeats,
-			CabinClass:     f.FareClass,
+			CabinClass:     cabinClass,
 			Aircraft:       f.Aircraft,
 			TotalMinutes:   totalDuration,
 			Amenities:      ensureSlice(f.Amenities),
@@ -150,26 +140,35 @@ func (p *GarudaProvider) Search(ctx context.Context, req domain.SearchRequest) (
 				CarryOn: fmt.Sprintf("%d", f.Baggage.CarryOn),
 				Checked: fmt.Sprintf("%d", f.Baggage.Checked),
 			},
+			Airline: domain.Airline{
+				Name: f.Airline,
+				Code: f.AirlineCode,
+			},
+			Departure: domain.Location{
+				Airport:   f.Departure.Airport,
+				City:      f.Departure.City,
+				Datetime:  dep.UTC(),
+				Timestamp: dep.Unix(),
+			},
+			Arrival: domain.Location{
+				Airport:   f.Arrival.Airport,
+				City:      f.Arrival.City,
+				Datetime:  arr.UTC(),
+				Timestamp: arr.Unix(),
+			},
+			Price: domain.Price{
+				Amount:   f.Price.Amount,
+				Currency: "IDR",
+			},
 		}
-
-		flight.Airline.Name = f.Airline
-		flight.Airline.Code = f.FlightID[:2]
-
-		flight.Departure.Airport = f.Departure.Airport
-		flight.Departure.City = f.Departure.City
-		flight.Departure.Datetime = dep
-		flight.Departure.Timestamp = dep.Unix()
-
-		flight.Arrival.Airport = f.Arrival.Airport
-		flight.Arrival.City = f.Arrival.City
-		flight.Arrival.Datetime = arr
-		flight.Arrival.Timestamp = arr.Unix()
-
-		flight.Price.Amount = f.Price.Amount
-		flight.Price.Currency = "IDR"
-
-		result = append(result, flight)
+		flights = append(flights, flight)
 	}
+	return flights, nil
+}
 
-	return result, nil
+func ensureSlice(s []string) []string {
+	if s == nil {
+		return []string{}
+	}
+	return s
 }

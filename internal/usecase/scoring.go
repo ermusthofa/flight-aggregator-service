@@ -1,6 +1,12 @@
-package service
+package usecase
 
 import "github.com/ermusthofa/flight-aggregator-service/internal/domain"
+
+type ScoringEngine struct{}
+
+func NewScoringEngine() *ScoringEngine {
+	return &ScoringEngine{}
+}
 
 const (
 	priceWeight    = 0.5
@@ -8,7 +14,7 @@ const (
 	stopsWeight    = 0.2
 )
 
-func ScoreFlights(flights []domain.Flight) {
+func (s *ScoringEngine) Calculate(flights []domain.Flight) {
 	if len(flights) == 0 {
 		return
 	}
@@ -55,7 +61,6 @@ func ScoreFlights(flights []domain.Flight) {
 
 		score := (nPrice * priceWeight) + (nDuration * durationWeight) + stopsPenalty
 
-		// convert to int for sorting
 		flights[i].Score = int(score * 1000)
 	}
 }

@@ -1,27 +1,46 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"time"
 
-	"github.com/ermusthofa/flight-aggregator-service/internal/cache"
-	httpHandler "github.com/ermusthofa/flight-aggregator-service/internal/transport/http"
-	"github.com/ermusthofa/flight-aggregator-service/internal/usecase"
+	"github.com/ermusthofa/flight-aggregator-service/internal/config"
 )
 
 func main() {
-	// init usecase
-	usecase := usecase.NewSearchFlightsUsecase(cache.NewMemoryCache())
+	// Load config
+	cfg := config.Load()
 
-	// init handler
-	handler := httpHandler.NewHandler(usecase)
-
-	// routes
-	http.HandleFunc("/search", handler.SearchFlights)
-
-	log.Println("Server running on :8080")
-	err := http.ListenAndServe(":8080", nil)
+	// Build dependency graph
+	app, err := config.InitializeApp(cfg)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed to initialize app: %v", err)
+	}
+
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: app.Handler,
+	}
+
+	go func() {
+		log.Println("Server running on :8080")
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("server error: %v", err)
+		}
+	}()
+
+	// Graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("shutdown error: %v", err)
 	}
 }

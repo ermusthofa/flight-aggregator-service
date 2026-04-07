@@ -8,35 +8,29 @@ import (
 	"github.com/ermusthofa/flight-aggregator-service/internal/dto"
 )
 
-func ToResponse(
-	req domain.SearchRequest,
-	flights []domain.Flight,
-	meta domain.Metadata,
-) dto.SearchResponse {
-
-	res := dto.SearchResponse{}
-
-	// search criteria
-	res.SearchCriteria = dto.SearchCriteria{
+func ToSearchCriteriaDTO(req domain.SearchRequest) dto.SearchCriteria {
+	return dto.SearchCriteria{
 		Origin:        req.Origin,
 		Destination:   req.Destination,
 		DepartureDate: req.DepartureDate,
 		Passengers:    req.Passengers,
 		CabinClass:    req.CabinClass,
 	}
+}
 
-	// metadata
-	res.Metadata = dto.Metadata{
-		TotalResults:       len(flights),
+func ToMetadataDTO(meta domain.Metadata) dto.Metadata {
+	return dto.Metadata{
+		TotalResults:       meta.TotalResults,
 		ProvidersQueried:   meta.ProvidersQueried,
 		ProvidersSucceeded: meta.ProvidersSucceeded,
 		ProvidersFailed:    meta.ProvidersFailed,
 		SearchTimeMs:       meta.SearchTimeMs,
 		CacheHit:           meta.CacheHit,
 	}
+}
 
-	// flights
-	res.Flights = make([]dto.Flight, 0)
+func ToFlightDTOs(flights []domain.Flight) []dto.Flight {
+	res := make([]dto.Flight, 0)
 
 	for _, f := range flights {
 
@@ -83,7 +77,7 @@ func ToResponse(
 		item.Baggage.CarryOn = f.Baggage.CarryOn
 		item.Baggage.Checked = f.Baggage.Checked
 
-		res.Flights = append(res.Flights, item)
+		res = append(res, item)
 	}
 
 	return res

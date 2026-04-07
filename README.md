@@ -63,17 +63,21 @@ curl -X POST http://localhost:8080/search \
 ## Project Structure
 
 ```
-/cmd
-  main.go
-
-/internal
-  /domain        -> core entities
-  /usecase       -> business logic (aggregation)
-  /provider      -> provider implementations (AirAsia, etc.)
-  /cache         -> cache layer
-  /mapper        -> domain -> response
-  /dto           -> response models
-  /transport     -> HTTP handler
+cmd/api/main.go                     # Entry point
+internal/
+  config/                           # DI container & settings
+  domain/                           # Core entities
+  dto/                              # API response DTOs
+  handler/http/                     # HTTP handlers with request ID middleware
+  mapper/                           # domain → dto conversion
+  partner/                          # Adapters for external APIs
+    mock/                           # Embedded JSON files (go:embed)
+    provider.go                     # Provider interface + RetryableProvider decorator
+    airasia.go, batik.go, ...       # Each airline adapter
+    helpers.go                      # Timezone mapping, baggage parsing, etc.
+  repository/                       # Cache abstraction
+  usecase/                          # Application orchestration
+  pkg/                              # Shared utilities
 ```
 
 ---
@@ -139,11 +143,5 @@ This helps keep the rest of the system clean.
 * Cache is short-lived to avoid stale pricing
 * No persistence layer (in-memory only)
 * Some fields are simplified (e.g. baggage mapping)
-
----
-
-## Closing
-
-This was built mainly to focus on backend logic and system design rather than completeness.
 
 ---
