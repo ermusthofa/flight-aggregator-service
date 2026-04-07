@@ -111,10 +111,7 @@ func (p *AirAsiaProvider) Search(ctx context.Context, req domain.SearchRequest) 
 		flight.Arrival.Timestamp = arr.Unix()
 
 		duration := arr.Sub(dep).Minutes()
-		flight.Duration = domain.Duration{
-			TotalMinutes: int(duration),
-			Formatted:    formatDuration(int(duration)),
-		}
+		flight.TotalMinutes = int(duration)
 
 		if !f.Direct {
 			flight.Stops = len(f.Stops)

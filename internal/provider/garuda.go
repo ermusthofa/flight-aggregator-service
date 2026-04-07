@@ -143,12 +143,9 @@ func (p *GarudaProvider) Search(ctx context.Context, req domain.SearchRequest) (
 			Stops:          stops,
 			AvailableSeats: f.AvailableSeats,
 			CabinClass:     f.FareClass,
-			Aircraft:       &f.Aircraft,
-			Duration: domain.Duration{
-				TotalMinutes: totalDuration,
-				Formatted:    formatDuration(totalDuration),
-			},
-			Amenities: ensureSlice(f.Amenities),
+			Aircraft:       f.Aircraft,
+			TotalMinutes:   totalDuration,
+			Amenities:      ensureSlice(f.Amenities),
 			Baggage: domain.Baggage{
 				CarryOn: fmt.Sprintf("%d", f.Baggage.CarryOn),
 				Checked: fmt.Sprintf("%d", f.Baggage.Checked),

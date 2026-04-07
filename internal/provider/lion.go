@@ -152,12 +152,9 @@ func (p *LionProvider) Search(ctx context.Context, req domain.SearchRequest) ([]
 			Stops:          stops,
 			AvailableSeats: f.Seats,
 			CabinClass:     cabinClass,
-			Aircraft:       &f.PlaneType,
-			Duration: domain.Duration{
-				TotalMinutes: duration,
-				Formatted:    formatDuration(duration),
-			},
-			Amenities: mapLionServicesToAmenities(f.Services.WifiAvailable, f.Services.MealsIncluded),
+			Aircraft:       f.PlaneType,
+			TotalMinutes:   duration,
+			Amenities:      mapLionServicesToAmenities(f.Services.WifiAvailable, f.Services.MealsIncluded),
 			Baggage: domain.Baggage{
 				CarryOn: f.Services.BaggageAllowance.Cabin,
 				Checked: f.Services.BaggageAllowance.Hold,

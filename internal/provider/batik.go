@@ -117,13 +117,10 @@ func (p *BatikProvider) Search(ctx context.Context, req domain.SearchRequest) ([
 			Stops:          f.Stops,
 			AvailableSeats: f.Seats,
 			CabinClass:     cabinClass,
-			Aircraft:       &f.AircraftModel,
-			Duration: domain.Duration{
-				TotalMinutes: duration,
-				Formatted:    formatDuration(duration),
-			},
-			Amenities: f.OnboardServices,
-			Baggage:   parseBaggage(f.BaggageInfo),
+			Aircraft:       f.AircraftModel,
+			TotalMinutes:   duration,
+			Amenities:      f.OnboardServices,
+			Baggage:        parseBaggage(f.BaggageInfo),
 		}
 
 		flight.Airline.Name = f.AirlineName

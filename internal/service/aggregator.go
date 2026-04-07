@@ -32,16 +32,7 @@ type providerResult struct {
 	name    string
 }
 
-type Metadata struct {
-	TotalResults       int   `json:"total_results"`
-	ProvidersQueried   int   `json:"providers_queried"`
-	ProvidersSucceeded int   `json:"providers_succeeded"`
-	ProvidersFailed    int   `json:"providers_failed"`
-	SearchTimeMs       int64 `json:"search_time_ms"`
-	CacheHit           bool  `json:"cache_hit"`
-}
-
-func (a *Aggregator) Search(ctx context.Context, req domain.SearchRequest) ([]domain.Flight, Metadata) {
+func (a *Aggregator) Search(ctx context.Context, req domain.SearchRequest) ([]domain.Flight, domain.Metadata) {
 	start := time.Now()
 
 	ctx, cancel := context.WithTimeout(ctx, a.timeout)
@@ -50,7 +41,7 @@ func (a *Aggregator) Search(ctx context.Context, req domain.SearchRequest) ([]do
 	key := buildCacheKey(req)
 
 	if data, ok := a.cache.Get(key); ok {
-		meta := Metadata{
+		meta := domain.Metadata{
 			ProvidersQueried: len(a.providers),
 			CacheHit:         true,
 		}
@@ -95,7 +86,7 @@ func (a *Aggregator) Search(ctx context.Context, req domain.SearchRequest) ([]do
 	close(ch)
 
 	allFlights := make([]domain.Flight, 0)
-	meta := Metadata{
+	meta := domain.Metadata{
 		ProvidersQueried: len(a.providers),
 	}
 

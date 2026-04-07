@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/ermusthofa/flight-aggregator-service/internal/domain"
+	"github.com/ermusthofa/flight-aggregator-service/internal/mapper"
 	"github.com/ermusthofa/flight-aggregator-service/internal/pkg"
 	"github.com/ermusthofa/flight-aggregator-service/internal/usecase"
 )
@@ -48,27 +49,22 @@ func (h *Handler) SearchFlights(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeSuccess(w, map[string]interface{}{
-		"flights":  flights,
-		"metadata": meta,
-	})
+	response := mapper.ToResponse(req, flights, meta)
+
+	writeSuccess(w, response)
 }
 
 func writeSuccess(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(domain.APIResponse{
-		Data: data,
-	})
+	json.NewEncoder(w).Encode(data)
 }
 
 func writeError(w http.ResponseWriter, message, code string, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 
-	json.NewEncoder(w).Encode(domain.APIResponse{
-		Error: &domain.APIError{
-			Message: message,
-			Code:    code,
-		},
+	json.NewEncoder(w).Encode(map[string]string{
+		"error": message,
+		"code":  code,
 	})
 }

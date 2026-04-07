@@ -26,7 +26,7 @@ func NewSearchFlightsUsecase(c cache.Cache) *SearchFlightsUsecase {
 	}
 }
 
-func (u *SearchFlightsUsecase) Execute(ctx context.Context, req domain.SearchRequest) ([]domain.Flight, service.Metadata, error) {
+func (u *SearchFlightsUsecase) Execute(ctx context.Context, req domain.SearchRequest) ([]domain.Flight, domain.Metadata, error) {
 	flights, meta := u.aggregator.Search(ctx, req)
 	return flights, meta, nil
 }

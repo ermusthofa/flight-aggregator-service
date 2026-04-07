@@ -13,15 +13,15 @@ func SortFlights(flights []domain.Flight, sortBy string) {
 
 		case "price":
 			if flights[i].Price.Amount == flights[j].Price.Amount {
-				return flights[i].Duration.TotalMinutes < flights[j].Duration.TotalMinutes
+				return flights[i].TotalMinutes < flights[j].TotalMinutes
 			}
 			return flights[i].Price.Amount < flights[j].Price.Amount
 
 		case "duration":
-			if flights[i].Duration.TotalMinutes == flights[j].Duration.TotalMinutes {
+			if flights[i].TotalMinutes == flights[j].TotalMinutes {
 				return flights[i].Price.Amount < flights[j].Price.Amount
 			}
-			return flights[i].Duration.TotalMinutes < flights[j].Duration.TotalMinutes
+			return flights[i].TotalMinutes < flights[j].TotalMinutes
 
 		case "departure":
 			return flights[i].Departure.Timestamp < flights[j].Departure.Timestamp

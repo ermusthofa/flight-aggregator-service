@@ -30,12 +30,6 @@ func getCityByAirport(airport string) string {
 	return city
 }
 
-func formatDuration(minutes int) string {
-	h := minutes / 60
-	m := minutes % 60
-	return fmt.Sprintf("%dh %dm", h, m)
-}
-
 func parseWithTimezone(dt string, tz string) (time.Time, error) {
 	loc, err := time.LoadLocation(tz)
 	if err != nil {

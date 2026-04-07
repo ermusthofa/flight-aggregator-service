@@ -11,7 +11,7 @@ type Flight struct {
 	Departure Location `json:"departure"`
 	Arrival   Location `json:"arrival"`
 
-	Duration Duration `json:"duration"`
+	TotalMinutes int `json:"total_minutes"`
 
 	Stops int `json:"stops"`
 
@@ -19,7 +19,7 @@ type Flight struct {
 
 	AvailableSeats int      `json:"available_seats"`
 	CabinClass     string   `json:"cabin_class"`
-	Aircraft       *string  `json:"aircraft"`
+	Aircraft       string   `json:"aircraft"`
 	Amenities      []string `json:"amenities"`
 
 	Baggage Baggage `json:"baggage"`
@@ -37,11 +37,6 @@ type Location struct {
 	City      string    `json:"city"`
 	Datetime  time.Time `json:"datetime"`
 	Timestamp int64     `json:"timestamp"`
-}
-
-type Duration struct {
-	TotalMinutes int    `json:"total_minutes"`
-	Formatted    string `json:"formatted"`
 }
 
 type Price struct {

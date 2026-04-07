@@ -84,7 +84,7 @@ func FilterFlights(flights []domain.Flight, req domain.SearchRequest) []domain.F
 		}
 
 		// Duration
-		if req.MaxDuration > 0 && f.Duration.TotalMinutes > req.MaxDuration {
+		if req.MaxDuration > 0 && f.TotalMinutes > req.MaxDuration {
 			continue
 		}
 
