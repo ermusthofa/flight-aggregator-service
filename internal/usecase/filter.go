@@ -17,27 +17,32 @@ func (s *FilterEngine) Apply(flights []domain.Flight, req domain.SearchRequest) 
 
 	var depFrom, depTo, arrFrom, arrTo *int
 
-	// Pre-parse
+	// Pre-parse departure time range
 	if req.DepartureTimeFrom != "" {
-		h, m, _ := parseClock(req.DepartureTimeFrom)
-		val := h*60 + m
-		depFrom = &val
+		if h, m, err := parseClock(req.DepartureTimeFrom); err == nil {
+			val := h*60 + m
+			depFrom = &val
+		}
 	}
 	if req.DepartureTimeTo != "" {
-		h, m, _ := parseClock(req.DepartureTimeTo)
-		val := h*60 + m
-		depTo = &val
+		if h, m, err := parseClock(req.DepartureTimeTo); err == nil {
+			val := h*60 + m
+			depTo = &val
+		}
 	}
 
+	// Pre-parse arrival time range
 	if req.ArrivalTimeFrom != "" {
-		h, m, _ := parseClock(req.ArrivalTimeFrom)
-		val := h*60 + m
-		arrFrom = &val
+		if h, m, err := parseClock(req.ArrivalTimeFrom); err == nil {
+			val := h*60 + m
+			arrFrom = &val
+		}
 	}
 	if req.ArrivalTimeTo != "" {
-		h, m, _ := parseClock(req.ArrivalTimeTo)
-		val := h*60 + m
-		arrTo = &val
+		if h, m, err := parseClock(req.ArrivalTimeTo); err == nil {
+			val := h*60 + m
+			arrTo = &val
+		}
 	}
 
 	for _, f := range flights {

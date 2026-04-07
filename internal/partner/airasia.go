@@ -100,7 +100,7 @@ func (p *AirAsiaProvider) Search(ctx context.Context, req domain.SearchRequest) 
 			Baggage:        parseBaggageNote(f.BaggageNote),
 			Airline: domain.Airline{
 				Name: f.Airline,
-				Code: f.FlightCode,
+				Code: f.FlightCode[:2],
 			},
 			Departure: domain.Location{
 				Airport:   f.From,

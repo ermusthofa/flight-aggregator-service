@@ -10,10 +10,10 @@ import (
 )
 
 type Handler struct {
-	searchUC *usecase.SearchFlightsUsecase
+	searchUC usecase.SearchFlightsUsecaseInterface
 }
 
-func NewHandler(uc *usecase.SearchFlightsUsecase) *Handler {
+func NewHandler(uc usecase.SearchFlightsUsecaseInterface) *Handler {
 	return &Handler{searchUC: uc}
 }
 

@@ -69,16 +69,7 @@ func parseBaggageNote(note string) domain.Baggage {
 }
 
 // parseWithTimezone maps WIB/WITA/WIT to IANA and parses time.
-func parseWithTimezone(dateStr, tzCode string) (time.Time, error) {
-	tzMap := map[string]string{
-		"WIB":  "Asia/Jakarta",
-		"WITA": "Asia/Makassar",
-		"WIT":  "Asia/Jayapura",
-	}
-	iana, ok := tzMap[tzCode]
-	if !ok {
-		iana = "UTC"
-	}
+func parseWithTimezone(dateStr, iana string) (time.Time, error) {
 	loc, err := time.LoadLocation(iana)
 	if err != nil {
 		return time.Time{}, err

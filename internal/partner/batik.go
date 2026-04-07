@@ -85,7 +85,7 @@ func (p *BatikProvider) Search(ctx context.Context, req domain.SearchRequest) ([
 			continue
 		}
 
-		// Compute duration: prefer time diff, fallback to parsing TravelTime string
+		// time diff, fallback to parsing TravelTime string
 		durationMinutes := int(arr.Sub(dep).Minutes())
 		if durationMinutes <= 0 && f.TravelTime != "" {
 			durationMinutes = parseDurationString(f.TravelTime)

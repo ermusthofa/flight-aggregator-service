@@ -79,6 +79,7 @@ func (p *GarudaProvider) Search(ctx context.Context, req domain.SearchRequest) (
 	for _, f := range resp.Flights {
 		var dep, arr time.Time
 		var totalDuration int
+		var arrivalAirport, arrivalCity string
 		var stops int
 
 		if len(f.Segments) > 0 {
@@ -98,6 +99,8 @@ func (p *GarudaProvider) Search(ctx context.Context, req domain.SearchRequest) (
 			}
 			stops = len(f.Segments) - 1
 			totalDuration = int(arr.Sub(dep).Minutes())
+			arrivalAirport = lastSeg.Arrival.Airport
+			arrivalCity = airportToCity(arrivalAirport)
 		} else {
 			// Direct flight
 			var err error
@@ -113,6 +116,8 @@ func (p *GarudaProvider) Search(ctx context.Context, req domain.SearchRequest) (
 			}
 			stops = f.Stops
 			totalDuration = f.DurationMinutes
+			arrivalAirport = f.Arrival.Airport
+			arrivalCity = f.Arrival.City
 		}
 
 		if arr.Before(dep) {
@@ -122,7 +127,7 @@ func (p *GarudaProvider) Search(ctx context.Context, req domain.SearchRequest) (
 
 		cabinClass := normalizeCabinClass(f.FareClass)
 
-		if !matchesSearchCriteria(req, f.Departure.Airport, f.Arrival.Airport, dep, f.AvailableSeats, cabinClass) {
+		if !matchesSearchCriteria(req, f.Departure.Airport, arrivalAirport, dep, f.AvailableSeats, cabinClass) {
 			continue
 		}
 
@@ -151,8 +156,8 @@ func (p *GarudaProvider) Search(ctx context.Context, req domain.SearchRequest) (
 				Timestamp: dep.Unix(),
 			},
 			Arrival: domain.Location{
-				Airport:   f.Arrival.Airport,
-				City:      f.Arrival.City,
+				Airport:   arrivalAirport,
+				City:      arrivalCity,
 				Datetime:  arr.UTC(),
 				Timestamp: arr.Unix(),
 			},
