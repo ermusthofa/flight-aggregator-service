@@ -147,9 +147,7 @@ This avoids relying on inconsistent provider fields.
 
 ### Normalization
 
-Each provider has its own adapter that converts raw data into a unified domain model.
-
-This helps keep the rest of the system clean.
+Each provider has its own conversion logic that transforms raw API responses into a unified domain model.
 
 ---
 
