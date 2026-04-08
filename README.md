@@ -13,6 +13,23 @@ The goal is to simulate some real-world problems like:
 
 ---
 
+## Approach
+
+The system is designed with a clean separation of concerns:
+- Provider Layer → Fetch data from external APIs (mocked)
+- Usecase Layer → Orchestrates aggregation, filtering, sorting
+- Domain Layer → Defines unified flight model
+- Handler Layer → Exposes HTTP endpoints
+
+## Key Decisions
+- Use interfaces for providers → easy to extend or replace
+- Apply concurrency (goroutines) → reduce response latency
+- Implement retry + timeout → handle unstable providers
+- Use in-memory caching → improve performance
+- Return partial results → improve system resilience
+
+---
+
 ## Features
 
 * Aggregate flights from multiple providers:
@@ -148,6 +165,22 @@ This avoids relying on inconsistent provider fields.
 ### Normalization
 
 Each provider has its own conversion logic that transforms raw API responses into a unified domain model.
+
+---
+
+## Scoring Logic (Best Value)
+
+Flights are ranked using a weighted scoring system:
+- Price → 50%
+- Duration → 30%
+- Stops penalty → 20%
+
+Each value is normalized before applying weights to ensure fair comparison.
+
+This allows balancing between:
+- Cheaper flights
+- Faster flights
+- Fewer stops
 
 ---
 
